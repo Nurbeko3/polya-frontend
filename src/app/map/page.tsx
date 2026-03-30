@@ -6,8 +6,6 @@ import { ArrowLeftIcon, MapIcon, LocateIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { UserMenu } from "@/components/auth/user-menu";
-import { useAuth } from "@/components/auth/auth-context";
 import dynamic from "next/dynamic";
 
 // The actual map logic stays in a client-side only component
@@ -24,7 +22,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrend
 
 export default function MapPage() {
   const [fields, setFields] = useState<Field[]>([]);
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Fetch fields
@@ -47,18 +44,6 @@ export default function MapPage() {
           </Link>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">Kirish</Button>
-                </Link>
-                <Link href="/signup">
-                  <Button size="sm">Ro'yxatdan o'tish</Button>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </header>

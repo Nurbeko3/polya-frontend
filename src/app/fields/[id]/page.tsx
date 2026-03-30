@@ -12,8 +12,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { UserMenu } from "@/components/auth/user-menu";
-import { useAuth } from "@/components/auth/auth-context";
 import {
   ArrowLeftIcon,
   MapPinIcon,
@@ -47,7 +45,6 @@ const fieldColors: Record<string, string> = {
 export default function FieldDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
   const fieldId = params.id as string;
 
   const [field, setField] = useState<Field | null>(null);
@@ -115,10 +112,6 @@ export default function FieldDetailPage() {
   };
 
   const handleBookSlot = () => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
     setShowPaymentDialog(true);
   };
 
@@ -127,7 +120,7 @@ export default function FieldDetailPage() {
 
     setPaymentLoading(true);
     try {
-      const userId = user?.id || 1;
+      const userId = 1;
       let firstPaymentUrl = "";
       
       for (const slot of selectedSlots) {
@@ -218,22 +211,6 @@ export default function FieldDetailPage() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Kirish
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button size="sm" className="shadow-md shadow-primary/20">
-                    Ro'yxatdan o'tish
-                  </Button>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </header>

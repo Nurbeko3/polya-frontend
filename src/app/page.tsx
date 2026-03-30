@@ -7,8 +7,6 @@ import { SearchFilters } from "@/components/search-filters";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Logo } from "@/components/logo";
-import { useAuth } from "@/components/auth/auth-context";
-import { UserMenu } from "@/components/auth/user-menu";
 import { AddFieldDialog } from "@/components/add-field-dialog";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -37,7 +35,6 @@ export default function HomePage() {
   const [fields, setFields] = useState<Field[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     fetchFields();
@@ -132,22 +129,6 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Kirish
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button size="sm" className="shadow-md shadow-primary/20">
-                    Ro'yxatdan o'tish
-                  </Button>
-                </Link>
-              </div>
-            )}
 
             <div className="flex items-center gap-2 border-l dark:border-slate-800 md:pl-4 pl-2">
               <ThemeToggle />

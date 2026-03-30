@@ -8,8 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { UserMenu } from "@/components/auth/user-menu";
-import { useAuth } from "@/components/auth/auth-context";
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -33,18 +31,17 @@ interface BookingWithField extends BookingSlot {
 }
 
 export default function BookingsPage() {
-  const { user, isAuthenticated } = useAuth();
   const [bookings, setBookings] = useState<BookingWithField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
     const fetchBookings = async () => {
       setIsLoading(true);
       try {
-        const data = await api.getMyBookings(user.id);
+        // User id vaqtincha 1 deb belgilandi yoki bu yerda boshqa mantiq bo'lishi mumkin
+        const userId = 1; 
+        const data = await api.getMyBookings(userId);
         const bookingsWithFields = await Promise.all(
           data.bookings.map(async (booking) => {
             try {
@@ -65,14 +62,15 @@ export default function BookingsPage() {
     };
 
     fetchBookings();
-  }, [isAuthenticated, user]);
+  }, []);
 
   const handleCancelBooking = async (slotId: number) => {
-    if (!user || !confirm("Bronni bekor qilishni tasdiqlaysizmi?")) return;
+    if (!confirm("Bronni bekor qilishni tasdiqlaysizmi?")) return;
+    const userId = 1;
 
     setCancellingId(slotId);
     try {
-      await api.cancelBooking(slotId, user.id);
+      await api.cancelBooking(slotId, userId);
       setBookings((prev) =>
         prev.map((b) =>
           b.id === slotId ? { ...b, status: "available" as const } : b
@@ -103,19 +101,6 @@ export default function BookingsPage() {
     return bookingDate >= today;
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Kirish talab qilinadi</h2>
-          <p className="text-muted-foreground mb-6">Iltimos, tizimga kiring</p>
-          <Link href="/login">
-            <Button>Kirish</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const upcomingBookings = bookings.filter(
     (b) => b.status === "booked" && isUpcoming(b.date)
@@ -134,7 +119,6 @@ export default function BookingsPage() {
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
-            <UserMenu />
           </div>
         </div>
       </header>
