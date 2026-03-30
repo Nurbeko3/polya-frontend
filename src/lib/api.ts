@@ -88,6 +88,20 @@ class ApiClient {
     return result;
   }
 
+  async adminSignup(data: {
+    phone: string;
+    name: string;
+    email?: string;
+    password: string;
+  }): Promise<TokenResponse> {
+    const result = await this.request<TokenResponse>("/auth/admin-signup", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    this.setToken(result.access_token);
+    return result;
+  }
+
   async login(phone: string, password: string): Promise<TokenResponse> {
     const result = await this.request<TokenResponse>("/auth/login", {
       method: "POST",

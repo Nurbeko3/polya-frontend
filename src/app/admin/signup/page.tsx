@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export default function AdminSignupPage() {
   const router = useRouter();
-  const { signup } = useAuth();
+  const { adminSignup } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -38,7 +38,7 @@ export default function AdminSignupPage() {
 
     try {
       // Signup funksiyasi (auth-context dagi) chaqiriladi
-      await signup({
+      await adminSignup({
         name: formData.name,
         phone: formData.phone,
         password: formData.password,
