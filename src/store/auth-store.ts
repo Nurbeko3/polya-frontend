@@ -16,6 +16,7 @@ interface AuthState {
   isLoading: boolean;
   login: (phone: string, password: string) => Promise<void>;
   signup: (name: string, phone: string, password: string, email?: string) => Promise<void>;
+  updateProfile: (data: { name?: string; password?: string; email?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -77,6 +78,34 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true, 
             isLoading: false 
           });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      updateProfile: async (data: { name?: string; password?: string; email?: string }) => {
+        const { token } = (useAuthStore.getState() as AuthState);
+        if (!token) throw new Error("Not authenticated");
+
+        set({ isLoading: true });
+        try {
+          const response = await fetch(`${API_URL}/auth/profile`, {
+            method: "PUT",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Update failed");
+          }
+
+          const updatedUser = await response.json();
+          set({ user: updatedUser, isLoading: false });
         } catch (error) {
           set({ isLoading: false });
           throw error;

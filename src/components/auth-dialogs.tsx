@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store/auth-store";
 import { PhoneIcon, UserIcon, LockClosedIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ import {
 import Link from "next/link";
 
 export function AuthDialogs() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">("login");
   const { login, signup, isLoading, isAuthenticated, user, logout } = useAuthStore();
@@ -60,32 +62,37 @@ export function AuthDialogs() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
   if (isAuthenticated && user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 p-1.5 pl-4 rounded-3xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group outline-none">
+          <button className="flex items-center gap-3 p-1.5 pl-4 rounded-3xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all group outline-none">
             <div className="flex flex-col items-end">
-              <span className="text-[11px] font-black uppercase tracking-widest text-white/90">{user.name}</span>
-              <span className="text-[9px] font-bold text-white/40">{user.phone}</span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-900 dark:text-white/90">{user.name}</span>
+              <span className="text-[9px] font-bold text-slate-500 dark:text-white/40">{user.phone}</span>
             </div>
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
               {user.name.charAt(0).toUpperCase()}
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-64 mt-2 p-2 rounded-[28px] bg-slate-900/80 backdrop-blur-3xl border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
+        <DropdownMenuContent className="w-64 mt-2 p-2 rounded-[28px] bg-white dark:bg-slate-900/90 backdrop-blur-3xl border-slate-200 dark:border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
           <DropdownMenuLabel className="px-4 py-3">
              <div className="flex flex-col">
-                <span className="text-xs font-black uppercase tracking-widest text-white/50 mb-1">Mening Akkauntim</span>
-                <span className="text-sm font-bold text-white">{user.name}</span>
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/50 mb-1">Mening Akkauntim</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">{user.name}</span>
              </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator className="bg-white/5 mx-2" />
+          <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 mx-2" />
           
           <div className="p-1 space-y-1">
             <Link href="/bookings/history">
-              <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:text-white focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-white/5">
+              <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white focus:bg-slate-100 dark:focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-slate-200 dark:focus:border-white/5">
                 <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                   <ClockIcon className="w-4 h-4" />
                 </div>
@@ -95,7 +102,7 @@ export function AuthDialogs() {
 
             {user.is_admin && (
               <Link href="/admin">
-                <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:text-white focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-white/5">
+                <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white focus:bg-slate-100 dark:focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-slate-200 dark:focus:border-white/5">
                   <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
                     <ShieldCheckIcon className="w-4 h-4" />
                   </div>
@@ -105,7 +112,7 @@ export function AuthDialogs() {
             )}
 
             <Link href="/settings">
-              <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-white/70 hover:text-white focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-white/5">
+              <DropdownMenuItem className="flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white focus:bg-slate-100 dark:focus:bg-white/10 cursor-pointer transition-all border border-transparent focus:border-slate-200 dark:focus:border-white/5">
                 <div className="w-8 h-8 rounded-xl bg-slate-500/10 flex items-center justify-center text-slate-400">
                   <Cog6ToothIcon className="w-4 h-4" />
                 </div>
@@ -114,12 +121,12 @@ export function AuthDialogs() {
             </Link>
           </div>
 
-          <DropdownMenuSeparator className="bg-white/5 mx-2" />
+          <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 mx-2" />
           
           <div className="p-1">
             <DropdownMenuItem 
-              onClick={logout}
-              className="flex items-center gap-3 px-3 py-3 rounded-2xl text-rose-400 hover:text-rose-300 focus:bg-rose-500/10 cursor-pointer transition-all border border-transparent focus:border-rose-500/10"
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-3 rounded-2xl text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 focus:bg-rose-500/10 cursor-pointer transition-all border border-transparent focus:border-rose-500/10"
             >
               <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center">
                 <ArrowLeftOnRectangleIcon className="w-4 h-4" />

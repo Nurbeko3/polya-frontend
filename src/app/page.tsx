@@ -352,18 +352,62 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary to-purple-600">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Hoziroq bron qiling!
-          </h2>
-          <p className="text-white/80 mb-8 max-w-xl mx-auto">
-            Eng yaxshi sport maydonlarini bir necha soniyada bron qiling
-          </p>
-          <Button size="lg" variant="secondary" className="shadow-xl">
-            Boshlash
-          </Button>
+      {/* How it Works Section */}
+      <section className="py-24 relative overflow-hidden bg-slate-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-purple-600/20" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-4 uppercase tracking-tight">Qanday ishlaydi?</h2>
+            <p className="text-slate-400 max-w-xl mx-auto font-bold uppercase tracking-widest text-xs">Ushbu 3 ta oddiy qadam orqali maydoningizni band qiling</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                step: "01",
+                title: "Maydonni tanlang",
+                desc: "O'zingizga qulay sport turi va joylashuvni filtrlar orqali tezda toping.",
+                icon: MapIcon,
+                color: "bg-blue-500"
+              },
+              {
+                step: "02",
+                title: "Vaqtni belgilang",
+                desc: "Kalendar orqali bo'sh vaqtni tanlang va ma'lumotlaringizni kiriting.",
+                icon: ClockIcon,
+                color: "bg-purple-500"
+              },
+              {
+                step: "03",
+                title: "To'lov va O'yin",
+                desc: "Click yoki Payme orqali to'lovni amalga oshiring va o'yinga tayyorlaning!",
+                icon: SparklesIcon,
+                color: "bg-emerald-500"
+              }
+            ].map((item, i) => (
+              <div key={i} className="group relative bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl hover:bg-white/10 transition-all duration-500 overflow-hidden">
+                <div className="absolute -right-8 -top-8 text-9xl font-black text-white/5 group-hover:text-white/10 transition-colors uppercase italic select-none">
+                  {item.step}
+                </div>
+                
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg", item.color)}>
+                  <item.icon className="w-8 h-8 text-white" />
+                </div>
+                
+                <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">{item.title}</h3>
+                <p className="text-slate-400 font-medium leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <a href="#fields">
+              <Button size="lg" className="rounded-2xl h-16 px-12 group shadow-2xl shadow-primary/40 bg-white text-slate-900 hover:bg-slate-100 dark:bg-white dark:text-slate-900 transition-all font-black uppercase tracking-[0.2em] text-sm">
+                Boshlash
+                <ArrowRightOnRectangleIcon className="w-5 h-5 ml-4 rotate-[270deg] group-hover:-translate-y-2 transition-transform" />
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
 

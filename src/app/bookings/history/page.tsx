@@ -67,15 +67,15 @@ export default function BookingHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-32 pb-20 px-4 sm:px-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-white pt-32 pb-20 px-4 sm:px-8">
       <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-4">
-            <Link href="/" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors">
+            <Link href="/" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 hover:text-primary transition-colors">
               <ChevronLeftIcon className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
               Bosh sahifa
             </Link>
-            <h1 className="text-5xl sm:text-6xl font-black uppercase tracking-tight leading-none bg-gradient-to-r from-white via-white to-white/20 bg-clip-text text-transparent">
+            <h1 className="text-5xl sm:text-6xl font-black uppercase tracking-tight leading-none bg-gradient-to-r from-slate-900 via-slate-900 to-slate-500 dark:from-white dark:via-white dark:to-white/20 bg-clip-text text-transparent">
               Mening <br /> Bronlarim
             </h1>
           </div>
@@ -83,7 +83,7 @@ export default function BookingHistoryPage() {
             variant="outline" 
             size="icon" 
             onClick={fetchHistory}
-            className="rounded-2xl h-14 w-14 border-white/5 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all"
+            className="rounded-2xl h-14 w-14 border-slate-200 dark:border-white/5 bg-white dark:bg-white/5 backdrop-blur-xl hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
           >
             <ArrowPathIcon className={cn("w-6 h-6", isLoading && "animate-spin")} />
           </Button>
@@ -92,15 +92,15 @@ export default function BookingHistoryPage() {
         {isLoading ? (
           <div className="space-y-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-white/5 rounded-[32px] animate-pulse" />
+              <div key={i} className="h-32 bg-slate-200/50 dark:bg-white/5 rounded-[32px] animate-pulse" />
             ))}
           </div>
         ) : bookings.length === 0 ? (
-          <div className="py-24 text-center bg-white/[0.02] border border-white/5 rounded-[48px] backdrop-blur-3xl">
-             <CalendarIcon className="w-16 h-16 text-white/10 mx-auto mb-6" />
+          <div className="py-24 text-center bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-[48px] backdrop-blur-3xl shadow-sm">
+             <CalendarIcon className="w-16 h-16 text-slate-200 dark:text-white/10 mx-auto mb-6" />
              <h3 className="text-2xl font-bold mb-2">Bronlar topilmadi</h3>
-             <p className="text-white/40 max-w-xs mx-auto">Sizda hali hech qanday faol bronlar mavjud emas.</p>
-             <Link href="/">
+             <p className="text-slate-500 dark:text-white/40 max-w-xs mx-auto">Sizda hali hech qanday faol bronlar mavjud emas.</p>
+             <Link href="/#fields">
                <Button className="mt-8 rounded-2xl h-12 px-8 font-bold uppercase tracking-widest">Hozir bron qilish</Button>
              </Link>
           </div>
@@ -109,7 +109,7 @@ export default function BookingHistoryPage() {
             {bookings.map((booking) => (
               <div 
                 key={booking.id} 
-                className="group relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-[36px] p-8 transition-all duration-500 backdrop-blur-3xl"
+                className="group relative bg-white dark:bg-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.06] border border-slate-200 dark:border-white/5 rounded-[36px] p-8 transition-all duration-500 backdrop-blur-3xl shadow-sm hover:shadow-xl"
               >
                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8">
                     <div className="flex items-start gap-6">
@@ -118,15 +118,15 @@ export default function BookingHistoryPage() {
                        </div>
                        <div className="space-y-2">
                           <div className="flex items-center gap-3">
-                             <h4 className="text-xl font-black uppercase tracking-tight">Maydon #{booking.field_id}</h4>
+                             <h4 className="text-xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Maydon #{booking.field_id}</h4>
                              <Badge variant="outline" className={cn(
                                "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest border-none",
-                               booking.status === 'booked' ? "bg-emerald-500/10 text-emerald-500" : "bg-white/5 text-white/40"
+                               booking.status === 'booked' ? "bg-emerald-500/10 text-emerald-500" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40"
                              )}>
                                {booking.status === 'booked' ? 'Tasdiqlangan' : booking.status}
                              </Badge>
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-bold text-white/40 text-xs uppercase tracking-widest">
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-bold text-slate-500 dark:text-white/40 text-xs uppercase tracking-widest">
                              <div className="flex items-center gap-2">
                                 <CalendarIcon className="w-4 h-4 text-primary/40" /> {booking.date}
                              </div>
@@ -137,12 +137,12 @@ export default function BookingHistoryPage() {
                        </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 sm:border-l border-white/5 sm:pl-8">
+                    <div className="flex items-center gap-4 sm:border-l border-slate-200 dark:border-white/5 sm:pl-8">
                        <div className="text-right flex flex-col justify-center">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">To'lov statusi</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-1">To'lov statusi</span>
                           <span className="text-lg font-black text-emerald-500 uppercase">To'langan</span>
                        </div>
-                       <Button variant="outline" className="rounded-2xl h-14 w-14 border-white/5 bg-white/5 opacity-0 group-hover:opacity-100 transition-all">
+                       <Button variant="outline" className="rounded-2xl h-14 w-14 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-all">
                           <CheckCircleIcon className="w-6 h-6 text-emerald-500" />
                        </Button>
                     </div>

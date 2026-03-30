@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotsGrid } from "@/components/time-slots-grid";
 import { PaymentDialog } from "@/components/payment-dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import {
   ArrowLeftIcon,
@@ -24,7 +21,7 @@ import {
   MapIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatPrice, formatDate, cn } from "@/lib/utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
@@ -95,7 +92,7 @@ export default function FieldDetailPage() {
 
   useEffect(() => {
     if (selectedDate) {
-      setSelectedSlots([]); // Clear prev selections when changing date
+      setSelectedSlots([]);
       fetchSlots();
     }
   }, [selectedDate, fetchSlots]);
@@ -169,13 +166,13 @@ export default function FieldDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex items-center justify-center">
         <div className="text-center">
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
             <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-muted-foreground dark:text-slate-400 text-lg">Yuklanmoqda...</p>
+          <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">Yuklanmoqda...</p>
         </div>
       </div>
     );
@@ -183,17 +180,15 @@ export default function FieldDetailPage() {
 
   if (!field) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-12 h-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex items-center justify-center p-4">
+        <div className="text-center bg-white dark:bg-white/[0.03] p-12 rounded-[48px] border border-slate-200 dark:border-white/5 shadow-2xl">
+          <div className="w-24 h-24 bg-rose-500/10 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+             <MapPinIcon className="w-12 h-12 text-rose-500" />
           </div>
-          <h2 className="text-2xl font-bold mb-2 dark:text-white">Maydon topilmadi</h2>
-          <p className="text-muted-foreground dark:text-slate-400 mb-6">Kechirasiz, bu maydon mavjud emas</p>
+          <h2 className="text-2xl font-black mb-2 dark:text-white uppercase tracking-tight">Maydon topilmadi</h2>
+          <p className="text-slate-500 dark:text-white/40 mb-8 font-bold">Kechirasiz, bu maydon mavjud emas</p>
           <Link href="/">
-            <Button>Bosh sahifaga qaytish</Button>
+            <Button size="lg" className="rounded-2xl px-10 font-black uppercase tracking-widest h-14">Bosh sahifaga qaytish</Button>
           </Link>
         </div>
       </div>
@@ -201,118 +196,118 @@ export default function FieldDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-white pb-20">
       {/* Header */}
-      <header className="glass dark:glass sticky top-0 z-50 border-b dark:border-slate-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeftIcon className="w-5 h-5" />
-            <span className="text-sm font-medium">Orqaga</span>
+      <header className="glass dark:glass sticky top-0 z-50 border-b border-slate-200 dark:border-white/5">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <Link href="/" className="group flex items-center gap-2 text-slate-400 dark:text-white/40 hover:text-primary transition-colors">
+            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-all" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Bosh sahifaga</span>
           </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <ThemeToggle />
+          <div className="flex items-center gap-4">
+             <div className="p-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+               <ThemeToggle />
+             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Image */}
-      <div className="relative h-72 md:h-96 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
+      <div className="relative h-[400px] bg-slate-200 dark:bg-[#0a0a0a] overflow-hidden">
         {field.image_url ? (
           <img src={field.image_url} alt={field.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <div className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-gradient-to-br ${fieldColors[field.field_type] || "from-primary to-purple-600"} flex items-center justify-center text-7xl md:text-8xl shadow-2xl`}>
+            <div className={`w-40 h-40 rounded-[40px] bg-gradient-to-br ${fieldColors[field.field_type] || "from-primary to-purple-600"} flex items-center justify-center text-7xl shadow-2xl opacity-80 rotate-3`}>
               {fieldIcons[field.field_type] || "🏟️"}
             </div>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-[#050505] via-transparent to-black/20" />
         
-        {/* Field Type Badge */}
-        <div className="absolute top-6 left-6">
-          <span className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${fieldColors[field.field_type] || "from-primary to-purple-600"} text-white rounded-full text-sm font-semibold shadow-lg`}>
-            {fieldIcons[field.field_type]} {field.field_type}
-          </span>
-        </div>
-
-        {/* Rating */}
         {field.rating > 0 && (
-          <div className="absolute top-6 right-6">
-            <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+          <div className="absolute top-10 right-8">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in">
               <StarIconSolid className="w-5 h-5 text-amber-400" />
-              <span className="font-bold">{field.rating.toFixed(1)}</span>
+              <span className="font-black text-white">{field.rating.toFixed(1)}</span>
             </div>
           </div>
         )}
 
-        {/* Title Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
           <div className="container mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-              {field.name}
-            </h1>
-            <div className="flex items-center gap-2 text-white/90">
-              <MapPinIcon className="w-5 h-5" />
-              <span className="font-medium">{field.city}, {field.address}</span>
+            <div className="flex flex-col gap-4">
+               <div className={`inline-flex items-center gap-2 w-fit px-4 py-1.5 rounded-full bg-gradient-to-r ${fieldColors[field.field_type]} text-white text-[10px] font-black uppercase tracking-widest shadow-lg`}>
+                  {fieldIcons[field.field_type]} {field.field_type}
+               </div>
+               <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tighter drop-shadow-sm">
+                 {field.name}
+               </h1>
+               <div className="flex items-center gap-2 text-slate-500 dark:text-white/40 font-bold text-sm">
+                 <MapPinIcon className="w-4 h-4 text-primary" />
+                 <span>{field.city}, {field.address}</span>
+               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Description Card */}
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-4 dark:text-white">Haqida</h2>
-                <p className="text-muted-foreground dark:text-slate-400 leading-relaxed">
+      <div className="container mx-auto px-4 -mt-6 relative z-10">
+        <div className="grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-10">
+            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-6">Haqida</h2>
+                <p className="text-lg font-bold text-slate-600 dark:text-white/70 leading-relaxed max-w-2xl">
                   {field.description || "Bu ajoyib sport maydoni. Keling va o'zingiz zavq oling!"}
                 </p>
                 
-                {/* Features */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-10">
                   {[
-                    { icon: UserGroupIcon, label: "Jamoa o'yini" },
-                    { icon: MapIcon, label: "Yaxshi lokatsiya" },
-                    { icon: StarIcon, label: "Yuqori reyting" },
+                    { icon: UserGroupIcon, label: "Jamoa o'yini", color: "text-blue-500", bg: "bg-blue-500/10" },
+                    { icon: MapIcon, label: "Yaxshi lokatsiya", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                    { icon: StarIcon, label: "Yuqori reyting", color: "text-amber-500", bg: "bg-amber-500/10" },
                   ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                      <feature.icon className="w-5 h-5 text-primary" />
-                      <span className="text-sm font-medium dark:text-slate-300">{feature.label}</span>
+                    <div key={i} className="flex flex-col items-start gap-3 p-6 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[32px] transition-all hover:border-primary/20 group">
+                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", feature.bg)}>
+                        <feature.icon className={cn("w-6 h-6", feature.color)} />
+                      </div>
+                      <span className="text-[11px] font-black uppercase tracking-[0.1em] dark:text-white/60">{feature.label}</span>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
-            {/* Booking Section */}
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-6 dark:text-white flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                  Bron qilish
-                </h2>
+            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
+                <div className="flex items-center justify-between mb-10">
+                   <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                         <CalendarIcon className="w-5 h-5 text-primary" />
+                      </div>
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20">Bron qilish</h2>
+                   </div>
+                </div>
                 
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-shrink-0">
+                <div className="flex flex-col xl:flex-row gap-10">
+                  <div className="flex-shrink-0 bg-slate-50 dark:bg-white/[0.02] p-6 rounded-[32px] border border-slate-100 dark:border-white/5">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      className="rounded-xl border-2 dark:border-slate-600"
+                      className="rounded-2xl"
                       disabled={(date) => date < new Date()}
                     />
                   </div>
                   
                   <div className="flex-1">
                     {selectedDate ? (
-                      <>
-                        <div className="flex items-center gap-2 mb-4 p-3 bg-primary/10 rounded-xl">
-                          <ClockIcon className="w-5 h-5 text-primary" />
-                          <span className="font-semibold">{formatDate(selectedDate)}</span>
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-white/[0.03] rounded-3xl border border-slate-100 dark:border-white/5">
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                 <ClockIcon className="w-5 h-5 text-primary" />
+                              </div>
+                              <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">{formatDate(selectedDate)}</span>
+                           </div>
                         </div>
                         <TimeSlotsGrid
                           slots={slots}
@@ -320,125 +315,98 @@ export default function FieldDetailPage() {
                           onToggleSlot={handleToggleSlot}
                           isLoading={slotsLoading}
                         />
-                      </>
+                      </div>
                     ) : (
-                      <div className="h-full min-h-[200px] flex items-center justify-center bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                      <div className="h-full min-h-[300px] flex items-center justify-center bg-slate-50 dark:bg-white/[0.02] rounded-[40px] border-2 border-dashed border-slate-100 dark:border-white/5">
                         <div className="text-center">
-                          <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                          <p className="text-muted-foreground">Sana tanlang</p>
+                          <CalendarIcon className="w-12 h-12 text-slate-200 dark:text-white/10 mx-auto mb-4" />
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20">Sana tanlang</p>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Selected Slot Info */}
                 {selectedSlots.length > 0 && (
-                  <div className="mt-6 bg-gradient-to-r from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-500/20 rounded-2xl p-5 border border-primary/20">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <CheckIcon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold dark:text-white">Tanlangan vaqt ({selectedSlots.length} soat):</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4 mb-5">
-                      <div className="bg-white dark:bg-slate-800 rounded-xl p-3 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Sana</p>
-                        <p className="font-semibold dark:text-white">{selectedDate && formatDate(selectedDate)}</p>
-                      </div>
-                      <div className="bg-white dark:bg-slate-800 rounded-xl p-3 text-center overflow-hidden">
-                        <p className="text-xs text-muted-foreground mb-1">Vaqt</p>
-                        <p className="font-semibold dark:text-white text-sm whitespace-nowrap">
-                          {selectedSlots[0].start_time} - {selectedSlots[selectedSlots.length - 1].end_time}
-                        </p>
-                      </div>
-                      <div className="bg-white dark:bg-slate-800 rounded-xl p-3 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Jami Narx</p>
-                        <p className="font-bold text-primary text-lg">{formatPrice(field.price_per_hour * selectedSlots.length)}</p>
-                      </div>
+                  <div className="mt-10 bg-primary/10 border border-primary/20 dark:border-primary/10 rounded-[40px] p-10 animate-in slide-in-from-top-4">
+                    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 rounded-[24px] bg-primary flex items-center justify-center text-white shadow-xl shadow-primary/30">
+                             <CheckIcon className="w-8 h-8" />
+                          </div>
+                          <div>
+                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Tanlangan vaqt</p>
+                             <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                                {selectedSlots.length} soat • {selectedSlots[0].start_time} - {selectedSlots[selectedSlots.length - 1].end_time}
+                             </h4>
+                          </div>
+                       </div>
+                       
+                       <div className="text-right">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 leading-none">Jami narx</p>
+                          <h4 className="text-4xl font-black text-primary">{formatPrice(field.price_per_hour * selectedSlots.length)}</h4>
+                       </div>
                     </div>
                     
                     <Button 
-                      className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/25" 
+                      className="w-full h-16 mt-10 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 group overflow-hidden relative" 
                       size="lg"
                       onClick={handleBookSlot}
                     >
-                      Bron qilish
+                      <span className="relative z-10">Tasdiqlash va to'lash</span>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
                     </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="lg:sticky lg:top-24 h-fit space-y-8">
             {/* Price Card */}
-            <Card className="sticky top-24 dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary to-purple-600 h-2" />
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="text-4xl font-bold text-primary dark:text-white">
-                    {formatPrice(field.price_per_hour)}
-                  </div>
-                  <div className="text-muted-foreground dark:text-slate-400">so'm / soat</div>
+            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5 overflow-hidden group">
+              <div className="absolute -top-1 left-0 right-0 h-4 bg-gradient-to-r from-primary to-purple-600 rounded-t-[48px]" />
+              
+              <div className="text-center mb-10">
+                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-2">Soatlik narx</div>
+                <div className="text-5xl font-black text-primary drop-shadow-sm">
+                  {formatPrice(field.price_per_hour)}
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <MapPinIcon className="w-5 h-5 text-primary" />
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  { icon: MapPinIcon, label: "Manzil", value: field.address, color: "text-blue-500", bg: "bg-blue-500/10" },
+                  { icon: ClockIcon, label: "Ish vaqti", value: "08:00 - 22:00", color: "text-purple-500", bg: "bg-purple-500/10" },
+                  { icon: PhoneIcon, label: "Bog'lanish", value: "+998 71 123 45 67", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 p-5 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[28px] transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.04]">
+                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-black/[0.02]", item.bg)}>
+                      <item.icon className={cn("w-5 h-5", item.color)} />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Manzil</p>
-                      <p className="font-medium dark:text-white text-sm">{field.address}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <ClockIcon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Ish vaqti</p>
-                      <p className="font-medium dark:text-white text-sm">08:00 - 22:00</p>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">{item.label}</p>
+                      <p className="font-bold dark:text-white text-sm truncate">{item.value}</p>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <PhoneIcon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Bog'lanish</p>
-                      <p className="font-medium dark:text-white text-sm">+998 71 123 45 67</p>
-                    </div>
-                  </div>
-                </div>
+              <Button className="w-full mt-10 h-16 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/20" size="lg" onClick={handleBookSlot}>
+                Hoziroq bron qilish
+              </Button>
+            </div>
 
-                <Button className="w-full mt-6 h-12 text-base font-semibold shadow-lg" size="lg" onClick={handleBookSlot}>
-                  Hoziroq bron qiling
-                </Button>
-
-                <p className="text-xs text-center text-muted-foreground mt-4">
-                  To'lov Click yoki Payme orqali
+            {/* Info Card */}
+            <div className="bg-gradient-to-br from-primary/10 to-purple-600/10 border border-primary/20 dark:border-primary/10 rounded-[40px] p-8 backdrop-blur-xl">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Maydon egasimisiz?</h3>
+                <p className="text-sm font-bold text-slate-600 dark:text-white/50 mb-6">
+                  Sizning maydoningiz hali ro'yxatda yo'qmi? Uni qo'shing va mijozlarni qabul qiling.
                 </p>
-              </CardContent>
-            </Card>
-
-            {/* Owner Card */}
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-              <CardContent className="p-5">
-                <h3 className="font-semibold mb-3 dark:text-white">Ega bo'lish</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sizning maydoningizni platformaga qo'shmoqchimisiz?
-                </p>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full h-12 rounded-2xl border-primary/20 dark:border-white/10 font-bold uppercase tracking-widest text-[10px] bg-white/50 dark:bg-white/5">
                   Maydon qo'shish
                 </Button>
-              </CardContent>
-            </Card>
+            </div>
           </div>
         </div>
       </div>
