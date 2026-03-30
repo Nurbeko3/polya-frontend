@@ -72,9 +72,9 @@ export function AuthDialogs() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none rounded-[32px] bg-white dark:bg-slate-900 shadow-2xl backdrop-blur-xl">
         <div className="bg-primary/5 p-8 border-b dark:border-slate-800 text-center">
-            <h2 className="text-2xl font-black uppercase tracking-tight dark:text-white mb-2">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight dark:text-white mb-2">
                 {mode === "login" ? "Xush kelibsiz" : "Ro'yxatdan o'tish"}
-            </h2>
+            </DialogTitle>
             <p className="text-muted-foreground text-sm font-medium">
                 {mode === "login" ? "Akkauntingizga kiring va bron qilishni davom ettiring" : "Polya platformasiga qo'shiling va eng yaxshi maydonlarni toping"}
             </p>

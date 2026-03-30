@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
                       <div>
                         <div className="flex items-center gap-2">
                            <span className="font-bold text-slate-900 dark:text-white">{user.name}</span>
-                           {user.is_admin && <ShieldCheck className="w-4 h-4 text-primary" title="Admin" />}
+                           {user.is_admin && <ShieldCheck className="w-4 h-4 text-primary" />}
                         </div>
                         <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none">ID: {user.id}</span>
                       </div>
