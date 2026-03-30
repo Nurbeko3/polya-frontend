@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface LogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
+  showText?: boolean;
+  whiteText?: boolean;
 }
 
 const sizes = {
@@ -11,7 +14,12 @@ const sizes = {
   lg: { container: "w-12 h-12", icon: "w-6 h-6", text: "text-2xl" },
 };
 
-export function Logo({ className = "", size = "md" }: LogoProps) {
+export function Logo({ 
+  className = "", 
+  size = "md", 
+  showText = true,
+  whiteText = false 
+}: LogoProps) {
   const s = sizes[size];
 
   return (
@@ -31,9 +39,15 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
           />
         </svg>
       </div>
-      <span className={`${s.text} font-bold`}>
-        Polya
-      </span>
+      {showText && (
+        <span className={cn(
+          s.text, 
+          "font-bold",
+          whiteText ? "text-white" : "text-slate-900 dark:text-white"
+        )}>
+          Polya
+        </span>
+      )}
     </Link>
   );
 }
