@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AuthDialogs } from "@/components/auth-dialogs";
 import { Field, FieldType } from "@/types";
 import { FieldCard } from "@/components/field-card";
 import { SearchFilters } from "@/components/search-filters";
@@ -129,7 +130,7 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-4">
-
+            <AuthDialogs />
             <div className="flex items-center gap-2 border-l dark:border-slate-800 md:pl-4 pl-2">
               <ThemeToggle />
               <button className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors">
@@ -187,16 +188,28 @@ export default function HomePage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
             {[
-              { label: "Aktiv maydonlar", value: stats?.active_fields || "500+" },
-              { label: "Shaharlar", value: stats?.cities || "12" },
-              { label: "Bron qilingan", value: stats?.bookings || "10K+" },
-              { label: "Foydalanuvchilar", value: stats?.users || "25K+" },
-            ].map((stat, i) => (
-              <div key={i} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-[28px] p-6 shadow-xl shadow-black/5 border border-white/20 dark:border-slate-700/50 text-center hover:scale-105 transition-transform duration-300">
-                <div className="text-3xl font-black text-primary mb-1">{stat.value}</div>
-                <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground dark:text-slate-400">{stat.label}</div>
-              </div>
-            ))}
+              { label: "Aktiv maydonlar", value: stats?.active_fields },
+              { label: "Shaharlar", value: stats?.cities },
+              { label: "Bron qilingan", value: stats?.bookings },
+              { label: "Foydalanuvchilar", value: stats?.users },
+            ].map((stat, i) => {
+              const formatValue = (val: any) => {
+                if (val === undefined || val === null) return "0";
+                if (typeof val === "number") {
+                  if (val >= 1000000) return (val / 1000000).toFixed(1) + "M+";
+                  if (val >= 1000) return (val / 1000).toFixed(1) + "K+";
+                  return val.toString();
+                }
+                return val;
+              };
+              
+              return (
+                <div key={i} className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-[28px] p-6 shadow-xl shadow-black/5 border border-white/20 dark:border-slate-700/50 text-center hover:scale-105 transition-transform duration-300">
+                  <div className="text-3xl font-black text-primary mb-1">{formatValue(stat.value)}</div>
+                  <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground dark:text-slate-400">{stat.label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

@@ -5,15 +5,18 @@ interface User {
   id: number;
   name: string;
   phone: string;
-  role: "user" | "owner" | "admin";
+  email?: string;
+  is_admin: boolean;
 }
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: (phone: string, code: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
+  login: (phone: string, password: string) => Promise<void>;
+  signup: (name: string, phone: string, password: string, email?: string) => Promise<void>;
+  logout: () => void;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
@@ -22,31 +25,58 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      token: null,
       isAuthenticated: false,
       isLoading: false,
 
-      login: async (phone: string, code: string) => {
+      login: async (phone: string, password: string) => {
         set({ isLoading: true });
         try {
-          const response = await fetch(`${API_URL}/auth/verify`, {
+          const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone, code }),
+            body: JSON.stringify({ phone, password }),
           });
 
           if (!response.ok) {
-            throw new Error("Verification failed");
+            const error = await response.json();
+            throw new Error(error.detail || "Login failed");
           }
 
           const data = await response.json();
-          const userData: User = {
-            id: data.user_id || data.id,
-            name: data.name || "Foydalanuvchi",
-            phone,
-            role: data.role || "user",
-          };
+          set({ 
+            user: data.user, 
+            token: data.access_token, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
 
-          set({ user: userData, isAuthenticated: true, isLoading: false });
+      signup: async (name: string, phone: string, password: string, email?: string) => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch(`${API_URL}/auth/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, phone, password, email }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || "Signup failed");
+          }
+
+          const data = await response.json();
+          set({ 
+            user: data.user, 
+            token: data.access_token, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -54,11 +84,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false });
       },
     }),
     {
-      name: "polya-auth",
+      name: "polya-auth-v2",
     }
   )
 );

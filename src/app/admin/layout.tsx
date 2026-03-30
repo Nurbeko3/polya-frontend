@@ -6,22 +6,37 @@ import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useAuthStore } from "@/store/auth-store";
 
+import { usePathname } from "next/navigation";
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/signup";
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !isAuthPage) {
       router.push("/admin/login");
+    } else if (isAuthenticated && !isAuthPage && !user?.is_admin) {
+      router.push("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isAuthPage, user, router]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isAuthPage) {
     return null;
+  }
+
+  if (isAuthenticated && !isAuthPage && !user?.is_admin) {
+    return null;
+  }
+
+  if (isAuthPage) {
+    return <>{children}</>;
   }
 
   return (
