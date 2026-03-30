@@ -20,7 +20,7 @@ const MapInstance = dynamic(() => import("@/components/map/map-instance"), {
   )
 });
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
 export default function MapPage() {
   const [fields, setFields] = useState<Field[]>([]);

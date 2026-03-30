@@ -28,7 +28,7 @@ import {
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { formatPrice, formatDate } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
 const fieldIcons: Record<string, string> = {
   football: "⚽",
