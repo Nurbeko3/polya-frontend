@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotsGrid } from "@/components/time-slots-grid";
 import { PaymentDialog } from "@/components/payment-dialog";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { AddFieldDialog } from "@/components/add-field-dialog";
 import {
   ArrowLeftIcon,
   MapPinIcon,
@@ -403,9 +404,13 @@ export default function FieldDetailPage() {
                 <p className="text-sm font-bold text-slate-600 dark:text-white/50 mb-6">
                   Sizning maydoningiz hali ro'yxatda yo'qmi? Uni qo'shing va mijozlarni qabul qiling.
                 </p>
-                <Button variant="outline" className="w-full h-12 rounded-2xl border-primary/20 dark:border-white/10 font-bold uppercase tracking-widest text-[10px] bg-white/50 dark:bg-white/5">
-                  Maydon qo'shish
-                </Button>
+                <AddFieldDialog 
+                  trigger={
+                    <Button variant="outline" className="w-full h-12 rounded-2xl border-primary/20 dark:border-white/10 font-bold uppercase tracking-widest text-[10px] bg-white/50 dark:bg-white/5 shadow-sm hover:border-primary/50 transition-all">
+                      Maydon qo'shish
+                    </Button>
+                  }
+                />
             </div>
           </div>
         </div>
