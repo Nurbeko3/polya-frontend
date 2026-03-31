@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import dynamic from "next/dynamic";
+import { API_URL } from "@/lib/api";
 
 // The actual map logic stays in a client-side only component
 const MapInstance = dynamic(() => import("@/components/map/map-instance"), { 
@@ -18,7 +19,6 @@ const MapInstance = dynamic(() => import("@/components/map/map-instance"), {
   )
 });
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
 export default function MapPage() {
   const [fields, setFields] = useState<Field[]>([]);

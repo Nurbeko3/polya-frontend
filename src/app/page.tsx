@@ -11,6 +11,7 @@ import { Logo } from "@/components/logo";
 import { AddFieldDialog } from "@/components/add-field-dialog";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { API_URL } from "@/lib/api";
 import {
   MapIcon,
   PlusCircleIcon,
@@ -23,7 +24,6 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
 const sportIcons: Record<string, string> = {
   football: "⚽",

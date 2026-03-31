@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { API_URL } from "@/lib/api";
 
 interface User {
   id: number;
@@ -20,7 +21,6 @@ interface AuthState {
   logout: () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
 
 export const useAuthStore = create<AuthState>()(
   persist(

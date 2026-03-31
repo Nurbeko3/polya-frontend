@@ -17,7 +17,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://polya-backend.onrender.com/api/v1";
+import { API_URL } from "@/lib/api";
 
 const fieldIcons: Record<string, string> = {
   football: "⚽",
