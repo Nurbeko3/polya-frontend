@@ -7,16 +7,24 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useAuthStore } from "@/store/auth-store";
 import { usePathname } from "next/navigation";
 import { Bell, Search } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, token } = useAuthStore();
   const hydrated = useAuthStore.persist.hasHydrated();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Sync token with API client
+  useEffect(() => {
+    if (hydrated) {
+      api.setToken(token);
+    }
+  }, [hydrated, token]);
 
   const isAuthPage = pathname === "/admin/login" || pathname === "/admin/signup";
 
