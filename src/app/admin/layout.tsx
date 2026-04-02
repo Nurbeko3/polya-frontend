@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -15,9 +15,25 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, user, token } = useAuthStore();
-  const hydrated = useAuthStore.persist.hasHydrated();
+  const [hydrated, setHydrated] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Handle hydration state safely
+  useEffect(() => {
+    // Check if store is already hydrated or set it when it does
+    const checkHydration = () => {
+      if (useAuthStore.persist?.hasHydrated()) {
+        setHydrated(true);
+      }
+    };
+    
+    checkHydration();
+    
+    // Also listen for hydration events if needed, but for now simple check is fine
+    const unsub = useAuthStore.persist?.onHydrate(() => checkHydration());
+    return () => unsub?.();
+  }, []);
 
   // Sync token with API client
   useEffect(() => {
