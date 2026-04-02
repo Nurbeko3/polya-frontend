@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { API_URL } from "@/lib/api";
+import { API_URL, api } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,11 +95,12 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users`);
-      const data = await response.json();
-      setUsers(data);
+      const data = await api.get<UserData[]>("/admin/users");
+      // If data is not an array, set users to empty array to avoid crash
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching users:", error);
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -107,12 +108,8 @@ export default function AdminUsersPage() {
 
   const toggleStatus = async (id: number) => {
     try {
-      const response = await fetch(`${API_URL}/admin/users/${id}/toggle-status`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        setUsers(users.map(u => u.id === id ? { ...u, is_active: !u.is_active } : u));
-      }
+      await api.post(`/admin/users/${id}/toggle-status`);
+      setUsers(users.map(u => u.id === id ? { ...u, is_active: !u.is_active } : u));
     } catch (error) {
       console.error("Error toggling user status:", error);
     }
@@ -128,16 +125,13 @@ export default function AdminUsersPage() {
     
     setIsDeleting(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users/${userToDelete}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        setUsers(users.filter(u => u.id !== userToDelete));
-        setIsDeleteDialogOpen(false);
-        setUserToDelete(null);
-      }
-    } catch (error) {
+      await api.delete(`/admin/users/${userToDelete}`);
+      setUsers(users.filter(u => u.id !== userToDelete));
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error: any) {
       console.error("Error deleting user:", error);
+      alert(error.message || "Foydalanuvchini o'chirishda xatolik");
     } finally {
       setIsDeleting(false);
     }
@@ -157,22 +151,16 @@ export default function AdminUsersPage() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
-
+ 
     setIsUpdating(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users/${editingUser.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
-      });
-
-      if (response.ok) {
-        setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...editFormData } : u));
-        setIsEditDialogOpen(false);
-        setEditingUser(null);
-      }
-    } catch (error) {
+      await api.put(`/admin/users/${editingUser.id}`, editFormData);
+      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...editFormData } : u));
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+    } catch (error: any) {
       console.error("Error updating user:", error);
+      alert(error.message || "Tahrirlashda xatolik");
     } finally {
       setIsUpdating(false);
     }
@@ -182,30 +170,21 @@ export default function AdminUsersPage() {
     e.preventDefault();
     setIsCreating(true);
     try {
-      const response = await fetch(`${API_URL}/admin/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createFormData),
+      await api.post("/admin/users", createFormData);
+      
+      // Since we don't get the full user back, just refetch
+      await fetchUsers();
+      setIsCreateDialogOpen(false);
+      setCreateFormData({
+        name: "",
+        phone: "",
+        email: "",
+        password: "",
+        is_admin: true,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Since we don't get the full user back, just refetch
-        fetchUsers();
-        setIsCreateDialogOpen(false);
-        setCreateFormData({
-          name: "",
-          phone: "",
-          email: "",
-          password: "",
-          is_admin: true,
-        });
-      } else {
-        const error = await response.json();
-        alert(error.detail || "Xatolik yuz berdi");
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating user:", error);
+      alert(error.message || "Xatolik yuz berdi");
     } finally {
       setIsCreating(false);
     }

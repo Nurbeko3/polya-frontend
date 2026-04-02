@@ -132,6 +132,30 @@ class ApiClient {
       method: "DELETE",
     });
   }
+
+  async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "GET" });
+  }
+
+  async post<T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { 
+      ...options, 
+      method: "POST", 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+  }
+
+  async put<T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { 
+      ...options, 
+      method: "PUT", 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+  }
+
+  async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "DELETE" });
+  }
 }
 
 export const api = new ApiClient();

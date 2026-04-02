@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { API_URL } from "@/lib/api";
+import { API_URL, api } from "@/lib/api";
 
 interface Application {
   id: number;
@@ -85,11 +85,11 @@ export default function AdminApplicationsPage() {
     setIsLoading(true);
     try {
       const statusParam = filterStatus !== "all" ? `?status=${filterStatus}` : "";
-      const response = await fetch(`${API_URL}/admin/applications${statusParam}`);
-      const data = await response.json();
+      const data = await api.get<Application[]>(`/admin/applications${statusParam}`);
       setApplications(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching applications:", error);
+      setApplications([]);
     } finally {
       setIsLoading(false);
     }
@@ -98,19 +98,12 @@ export default function AdminApplicationsPage() {
   const handleAction = async (id: number, action: "approve" | "reject") => {
     setActionLoading(id);
     try {
-      const response = await fetch(`${API_URL}/admin/applications/${id}/${action}`, {
-        method: "POST",
-      });
-      if (response.ok) {
-        setApplications((apps) => apps.filter((app) => app.id !== id));
-        setExpandedApp(null);
-      } else {
-        const data = await response.json();
-        alert(data.detail || "Xatolik yuz berdi");
-      }
-    } catch (error) {
+      await api.post(`/admin/applications/${id}/${action}`);
+      setApplications((apps) => apps.filter((app) => app.id !== id));
+      setExpandedApp(null);
+    } catch (error: any) {
       console.error(`Error ${action}ing application:`, error);
-      alert("Xatolik yuz berdi.");
+      alert(error.message || "Xatolik yuz berdi.");
     } finally {
       setActionLoading(null);
     }

@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { API_URL } from "@/lib/api";
+import { API_URL, api } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -86,11 +86,11 @@ export default function AdminFieldsPage() {
   const fetchFields = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/fields/`);
-      const data = await response.json();
+      const data = await api.get<any>("/fields/");
       setFields(data.fields || []);
     } catch (error) {
       console.error("Error fetching fields:", error);
+      setFields([]);
     } finally {
       setIsLoading(false);
     }
@@ -98,14 +98,8 @@ export default function AdminFieldsPage() {
 
   const toggleStatus = async (field: Field) => {
     try {
-      const response = await fetch(`${API_URL}/fields/${field.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: !field.is_active }),
-      });
-      if (response.ok) {
-        setFields(fields.map(f => f.id === field.id ? { ...f, is_active: !f.is_active } : f));
-      }
+      await api.put(`/fields/${field.id}`, { is_active: !field.is_active });
+      setFields(fields.map(f => f.id === field.id ? { ...f, is_active: !f.is_active } : f));
     } catch (error) {
       console.error("Error toggling status:", error);
     }
@@ -115,12 +109,8 @@ export default function AdminFieldsPage() {
     if (!confirm("Haqiqatdan ham ushbu maydonni o'chirmoqchimisiz?")) return;
     
     try {
-      const response = await fetch(`${API_URL}/fields/${id}`, {
-        method: "DELETE",
-      });
-      if (response.status === 204) {
-        setFields(fields.filter(f => f.id !== id));
-      }
+      await api.delete(`/fields/${id}`);
+      setFields(fields.filter(f => f.id !== id));
     } catch (error) {
       console.error("Error deleting field:", error);
     }
@@ -143,25 +133,16 @@ export default function AdminFieldsPage() {
   const handleUpdateField = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingField) return;
-
+ 
     setIsUpdating(true);
     try {
-      const response = await fetch(`${API_URL}/fields/${editingField.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
-      });
-
-      if (response.ok) {
-        setFields(fields.map(f => f.id === editingField.id ? { ...f, ...editFormData } : f));
-        setIsEditDialogOpen(false);
-        setEditingField(null);
-      } else {
-        const error = await response.json();
-        alert(error.detail || "Xatolik yuz berdi");
-      }
-    } catch (error) {
+      await api.put(`/fields/${editingField.id}`, editFormData);
+      setFields(fields.map(f => f.id === editingField.id ? { ...f, ...editFormData } : f));
+      setIsEditDialogOpen(false);
+      setEditingField(null);
+    } catch (error: any) {
       console.error("Error updating field:", error);
+      alert(error.message || "Xatolik yuz berdi");
     } finally {
       setIsUpdating(false);
     }
