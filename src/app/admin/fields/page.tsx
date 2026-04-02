@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   MapPin, 
   Trash2, 
@@ -15,7 +15,11 @@ import {
   Activity,
   PlusCircle,
   Map as MapIcon,
-  ChevronRight
+  ChevronRight,
+  ImagePlus,
+  Upload,
+  X as XIcon,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +83,12 @@ export default function AdminFieldsPage() {
     image_url: "",
   });
 
+  // Image upload state
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetchFields();
   }, []);
@@ -127,7 +137,36 @@ export default function AdminFieldsPage() {
       description: (field as any).description || "",
       image_url: field.image_url || "",
     });
+    setImageFile(null);
+    setImagePreview(field.image_url || null);
     setIsEditDialogOpen(true);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Faqat rasm fayllarini tanlang (JPG, PNG, WebP)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Rasm hajmi 5MB dan katta bo'lmasligi kerak");
+      return;
+    }
+
+    setImageFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(editingField?.image_url || null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleUpdateField = async (e: React.FormEvent) => {
@@ -136,10 +175,31 @@ export default function AdminFieldsPage() {
  
     setIsUpdating(true);
     try {
-      await api.put(`/fields/${editingField.id}`, editFormData);
-      setFields(fields.map(f => f.id === editingField.id ? { ...f, ...editFormData } : f));
+      let finalImageUrl = editFormData.image_url;
+
+      // If a new image file was selected, upload it first
+      if (imageFile) {
+        setIsUploadingImage(true);
+        try {
+          const uploadResult = await api.uploadFile<{ url: string }>("/fields/upload", imageFile);
+          finalImageUrl = uploadResult.url;
+        } catch (uploadError: any) {
+          console.error("Image upload failed:", uploadError);
+          alert("Rasm yuklashda xatolik: " + (uploadError.message || "Noma'lum xatolik"));
+          setIsUploadingImage(false);
+          setIsUpdating(false);
+          return;
+        }
+        setIsUploadingImage(false);
+      }
+
+      const updateData = { ...editFormData, image_url: finalImageUrl };
+      await api.put(`/fields/${editingField.id}`, updateData);
+      setFields(fields.map(f => f.id === editingField.id ? { ...f, ...updateData } : f));
       setIsEditDialogOpen(false);
       setEditingField(null);
+      setImageFile(null);
+      setImagePreview(null);
     } catch (error: any) {
       console.error("Error updating field:", error);
       alert(error.message || "Xatolik yuz berdi");
@@ -435,12 +495,91 @@ export default function AdminFieldsPage() {
                 </div>
               </div>
 
-              <div className="sm:col-span-2 space-y-2.5">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Rasm URL</Label>
+              <div className="sm:col-span-2 space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Maydon Rasmi</Label>
+                
+                {/* Image Preview */}
+                <div className="relative group/img">
+                  {imagePreview ? (
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                      <img
+                        src={imagePreview}
+                        alt="Maydon rasmi"
+                        className="w-full h-48 object-cover rounded-2xl"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop";
+                        }}
+                      />
+                      {/* Overlay with actions */}
+                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-all duration-300 flex items-center justify-center gap-3 opacity-0 group-hover/img:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-4 py-2.5 bg-white/90 backdrop-blur-sm text-slate-900 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-white transition-colors shadow-lg"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Rasmni o'zgartirish
+                        </button>
+                      </div>
+                      {/* File name badge if new file selected */}
+                      {imageFile && (
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                          <div className="px-3 py-1.5 bg-emerald-500/90 backdrop-blur-sm rounded-lg text-white text-[10px] font-bold flex items-center gap-1.5 shadow-lg">
+                            <ImagePlus className="w-3 h-3" />
+                            Yangi rasm tanlandi: {imageFile.name.length > 20 ? imageFile.name.substring(0, 20) + '...' : imageFile.name}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="w-7 h-7 bg-red-500/90 backdrop-blur-sm rounded-lg text-white flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                          >
+                            <XIcon className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-48 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-3 cursor-pointer group/btn"
+                    >
+                      <div className="w-14 h-14 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center group-hover/btn:bg-primary/10 group-hover/btn:scale-110 transition-all">
+                        <ImagePlus className="w-7 h-7 text-slate-400 group-hover/btn:text-primary transition-colors" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-slate-500 group-hover/btn:text-primary transition-colors">Rasm tanlash</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WebP · Max 5MB</p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/jpg"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+
+                {/* URL input as fallback */}
+                <div className="flex items-center gap-2">
+                  <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-600">yoki URL kiriting</span>
+                  <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                </div>
                 <Input
                   value={editFormData.image_url}
-                  onChange={(e) => setEditFormData({ ...editFormData, image_url: e.target.value })}
-                  className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-medium text-xs break-all px-4"
+                  onChange={(e) => {
+                    setEditFormData({ ...editFormData, image_url: e.target.value });
+                    setImagePreview(e.target.value || null);
+                    setImageFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  placeholder="https://example.com/image.jpg"
+                  className="h-12 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-medium text-xs break-all px-4"
                 />
               </div>
             </div>
@@ -456,10 +595,12 @@ export default function AdminFieldsPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={isUpdating}
+                disabled={isUpdating || isUploadingImage}
                 className="flex-1 rounded-2xl h-14 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
               >
-                {isUpdating ? "Saqlanmoqda..." : "Saqlash"}
+                {isUploadingImage ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Rasm yuklanmoqda...</>
+                ) : isUpdating ? "Saqlanmoqda..." : "Saqlash"}
               </Button>
             </DialogFooter>
           </form>

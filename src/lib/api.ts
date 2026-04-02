@@ -168,6 +168,33 @@ class ApiClient {
   async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
+
+  async uploadFile<T>(endpoint: string, file: File, fieldName: string = "file"): Promise<T> {
+    this.syncToken();
+    
+    const formData = new FormData();
+    formData.append(fieldName, file);
+    
+    const headers: HeadersInit = {};
+    if (this.token) {
+      (headers as Record<string, string>)["Authorization"] = `Bearer ${this.token}`;
+    }
+    
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json().catch(() => ({
+        detail: "Fayl yuklashda xatolik yuz berdi",
+      }));
+      throw new Error(error.detail || error.error || "Upload failed");
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient();
