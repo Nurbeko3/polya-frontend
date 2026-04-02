@@ -614,7 +614,7 @@ export default function AdminUsersPage() {
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                   <Input
-                    placeholder="Masalan: nurbek_admin"
+                    placeholder="Masalan: _admin"
                     value={createFormData.phone}
                     onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
                     className="h-12 pl-12 rounded-xl bg-slate-50 border-none focus-visible:ring-emerald-500/20 text-sm font-medium"
