@@ -23,7 +23,12 @@ export default function AdminLoginPage() {
       await login(phone, password);
       router.push("/admin");
     } catch (err: any) {
-      setError(err.message || "Telefon raqami yoki parol noto'g'ri");
+      console.error("Login error:", err);
+      // Handle cases where err.message might be an object or undefined
+      const errorMessage = typeof err.message === 'string' 
+        ? err.message 
+        : (err.detail || "Telefon raqami yoki parol noto'g'ri");
+      setError(errorMessage);
     }
   };
 
