@@ -14,18 +14,23 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, user } = useAuthStore();
+  const hydrated = useAuthStore.persist.hasHydrated();
   const router = useRouter();
   const pathname = usePathname();
 
   const isAuthPage = pathname === "/admin/login" || pathname === "/admin/signup";
 
   useEffect(() => {
-    if (!isAuthenticated && !isAuthPage) {
+    if (hydrated && !isAuthenticated && !isAuthPage) {
       router.push("/admin/login");
-    } else if (isAuthenticated && !isAuthPage && !user?.is_admin) {
+    } else if (hydrated && isAuthenticated && !isAuthPage && !user?.is_admin) {
       router.push("/");
     }
-  }, [isAuthenticated, isAuthPage, user, router]);
+  }, [hydrated, isAuthenticated, isAuthPage, user, router]);
+
+  if (!hydrated) {
+    return null; // Don't redirect until we know the auth state
+  }
 
   if (!isAuthenticated && !isAuthPage) {
     return null;

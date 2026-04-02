@@ -26,23 +26,33 @@ class ApiClient {
   private token: string | null = null;
 
   constructor() {
+    this.syncToken();
+  }
+
+  private syncToken() {
     if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("polya_token");
+      try {
+        const authData = localStorage.getItem("polya-auth-v2");
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          this.token = parsed.state?.token || null;
+        }
+      } catch (e) {
+        console.error("Error syncing token:", e);
+        this.token = null;
+      }
     }
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (typeof window !== "undefined") {
-      if (token) {
-        localStorage.setItem("polya_token", token);
-      } else {
-        localStorage.removeItem("polya_token");
-      }
-    }
+    // Note: Zustand persist will handle the localStorage update for its own state,
+    // but we can also sync here if needed. For now, we rely on the syncToken call
+    // before each request or similar.
   }
 
   getToken(): string | null {
+    this.syncToken(); // Always sync before getting
     return this.token;
   }
 
@@ -50,6 +60,8 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    this.syncToken(); // Ensure token is up to date from localStorage before each request
+    
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       ...options.headers,
