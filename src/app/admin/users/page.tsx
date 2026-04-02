@@ -294,7 +294,7 @@ export default function AdminUsersPage() {
                <thead>
                   <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b dark:border-slate-800">
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">Foydalanuvchi</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">Aloqa ma'lumotlari</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">Login / Ma'lumotlar</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">Holat / Rol</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">Sana</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 text-right leading-none">Boshqaruv</th>
@@ -469,9 +469,9 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefon</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Login</Label>
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                   <Input
                     value={editFormData.phone}
                     onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
@@ -610,11 +610,11 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Telefon raqam</Label>
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Login / Username</Label>
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                   <Input
-                    placeholder="+998 90 123 45 67"
+                    placeholder="Masalan: nurbek_admin"
                     value={createFormData.phone}
                     onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
                     className="h-12 pl-12 rounded-xl bg-slate-50 border-none focus-visible:ring-emerald-500/20 text-sm font-medium"

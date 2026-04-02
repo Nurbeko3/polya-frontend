@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/auth-store";
-import { ShieldCheck, Eye, EyeOff, Phone, Lock, ArrowRight } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, User, Lock, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [phone, setPhone] = useState("");
@@ -56,17 +56,17 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">
-                Telefon raqam
+                Loginingiz
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Phone className="w-5 h-5 text-white/20" />
+                  <User className="w-5 h-5 text-white/20" />
                 </div>
                 <input
-                  type="tel"
+                  type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+998 90 123 45 67"
+                  placeholder="Nurbek"
                   className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all font-medium"
                   required
                 />
@@ -124,14 +124,6 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
-            <p className="text-sm text-white/30">
-              Admin akkauntingiz yo'qmi?{" "}
-              <Link href="/admin/signup" className="text-primary hover:text-primary/80 font-bold transition-colors">
-                Ro'yxatdan o'ting
-              </Link>
-            </p>
-          </div>
         </div>
 
         <div className="text-center mt-8">
