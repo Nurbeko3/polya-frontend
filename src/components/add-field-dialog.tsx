@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -117,12 +118,16 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
         });
         setSelectedFile(null);
         setPreviewUrl(null);
-        alert("Ariza muvaffaqiyatli yuborildi! Adminlar tez orada ko'rib chiqishadi.");
+        toast.success("Ariza muvaffaqiyatli yuborildi!", {
+          description: "Adminlar tez orada ko'rib chiqishadi.",
+        });
         onSuccess?.();
       }
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.");
+      toast.error("Xatolik yuz berdi", {
+        description: "Iltimos qaytadan urinib ko'ring.",
+      });
     } finally {
       setIsLoading(false);
     }

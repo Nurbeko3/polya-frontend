@@ -81,6 +81,10 @@ export default function AdminFieldsPage() {
     field_type: "football",
     description: "",
     image_url: "",
+    click_service_id: "",
+    click_merchant_id: "",
+    click_merchant_user_id: "",
+    click_p2p_link: "",
   });
 
   // Image upload state
@@ -136,6 +140,10 @@ export default function AdminFieldsPage() {
       field_type: field.field_type,
       description: (field as any).description || "",
       image_url: field.image_url || "",
+      click_service_id: (field as any).click_service_id || "",
+      click_merchant_id: (field as any).click_merchant_id || "",
+      click_merchant_user_id: (field as any).click_merchant_user_id || "",
+      click_p2p_link: (field as any).click_p2p_link || "",
     });
     setImageFile(null);
     setImagePreview(field.image_url || null);
@@ -417,7 +425,7 @@ export default function AdminFieldsPage() {
 
       {/* Edit Field Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[40px] sm:max-w-[600px] border-none p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="rounded-[40px] sm:max-w-[600px] border-none p-0 overflow-hidden shadow-2xl max-h-[95vh] flex flex-col">
           <div className="bg-gradient-to-br from-primary to-blue-600 p-10 text-white relative">
             <DialogHeader>
               <DialogTitle className="text-3xl font-black uppercase tracking-tight">Maydonni Tahrirlash</DialogTitle>
@@ -428,14 +436,15 @@ export default function AdminFieldsPage() {
             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
           </div>
 
-          <form onSubmit={handleUpdateField} className="p-10 space-y-8">
+          <form onSubmit={handleUpdateField} className="flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto p-10 space-y-8 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2.5">
                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Maydon Nomi</Label>
                 <Input
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-bold text-base"
+                  className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary/20 font-bold text-base text-slate-900 dark:text-white"
                   required
                 />
               </div>
@@ -446,7 +455,7 @@ export default function AdminFieldsPage() {
                   value={editFormData.field_type}
                   onValueChange={(val) => setEditFormData({ ...editFormData, field_type: val })}
                 >
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none focus:ring-primary/20 font-bold text-base">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus:ring-primary/20 font-bold text-base text-slate-900 dark:text-white">
                     <SelectValue placeholder="Turini tanlang" />
                   </SelectTrigger>
                   <SelectContent className="rounded-[24px] border-slate-100 bg-white dark:bg-slate-900 shadow-2xl p-2 z-[100]">
@@ -463,7 +472,7 @@ export default function AdminFieldsPage() {
                 <Input
                   value={editFormData.city}
                   onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
-                  className="h-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-bold text-base"
+                  className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary/20 font-bold text-base text-slate-900 dark:text-white"
                   required
                 />
               </div>
@@ -476,7 +485,7 @@ export default function AdminFieldsPage() {
                     type="number"
                     value={editFormData.price_per_hour}
                     onChange={(e) => setEditFormData({ ...editFormData, price_per_hour: parseInt(e.target.value) })}
-                    className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-bold text-lg text-primary"
+                    className="h-14 pl-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary/20 font-bold text-lg text-primary dark:text-blue-400"
                     required
                   />
                 </div>
@@ -489,7 +498,7 @@ export default function AdminFieldsPage() {
                   <Input
                     value={editFormData.address}
                     onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                    className="h-14 pl-14 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-bold"
+                    className="h-14 pl-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary/20 font-bold text-slate-900 dark:text-white"
                     required
                   />
                 </div>
@@ -579,33 +588,86 @@ export default function AdminFieldsPage() {
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   placeholder="https://example.com/image.jpg"
-                  className="h-12 rounded-2xl bg-slate-50 border-none focus-visible:ring-primary/20 font-medium text-xs break-all px-4"
+                  className="h-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none focus-visible:ring-primary/20 font-medium text-xs break-all px-4 text-slate-900 dark:text-white"
                 />
               </div>
-            </div>
 
-            <DialogFooter className="gap-3 sm:gap-0 pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex-1 rounded-2xl h-14 font-bold text-slate-400"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Bekor qilish
-              </Button>
-              <Button
-                type="submit"
-                disabled={isUpdating || isUploadingImage}
-                className="flex-1 rounded-2xl h-14 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
-              >
-                {isUploadingImage ? (
-                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Rasm yuklanmoqda...</>
-                ) : isUpdating ? "Saqlanmoqda..." : "Saqlash"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+              {/* Click Payment Section */}
+              <div className="sm:col-span-2 pt-4 border-t dark:border-slate-800">
+                <div className="flex items-center gap-3 mb-6">
+                   <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                      <Banknote className="w-5 h-5 text-blue-500" />
+                   </div>
+                   <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Click To'lov Tizimi</h4>
+                      <p className="text-[10px] text-muted-foreground font-medium">Stadion egasining Click hisob ma'lumotlarini kiriting.</p>
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 ml-1">Merchant ID</Label>
+                    <Input
+                      value={editFormData.click_merchant_id}
+                      onChange={(e) => setEditFormData({ ...editFormData, click_merchant_id: e.target.value })}
+                      placeholder="Masalan: 12345"
+                      className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-none px-4 text-sm font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 ml-1">Service ID</Label>
+                    <Input
+                      value={editFormData.click_service_id}
+                      onChange={(e) => setEditFormData({ ...editFormData, click_service_id: e.target.value })}
+                      placeholder="Masalan: 54321"
+                      className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-none px-4 text-sm font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 ml-1">Merchant User ID</Label>
+                    <Input
+                      value={editFormData.click_merchant_user_id}
+                      onChange={(e) => setEditFormData({ ...editFormData, click_merchant_user_id: e.target.value })}
+                      placeholder="Masalan: 67890"
+                      className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-none px-4 text-sm font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 space-y-2">
+                    <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 ml-1">P2P To'lov Linki</Label>
+                    <Input
+                      value={editFormData.click_p2p_link}
+                      onChange={(e) => setEditFormData({ ...editFormData, click_p2p_link: e.target.value })}
+                      placeholder="https://my.click.uz/clickp2p/..."
+                      className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-none px-4 text-sm font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+            
+          <DialogFooter className="gap-3 sm:gap-0 pt-4 p-8 border-t dark:border-slate-800 bg-white dark:bg-slate-900">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1 rounded-2xl h-14 font-bold text-slate-400"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              type="submit"
+              disabled={isUpdating || isUploadingImage}
+              className="flex-1 rounded-2xl h-14 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
+            >
+              {isUploadingImage ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Rasm yuklanmoqda...</>
+              ) : isUpdating ? "Saqlanmoqda..." : "Saqlash"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  </div>
   );
 }

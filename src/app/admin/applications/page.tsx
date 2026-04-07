@@ -18,6 +18,8 @@ import {
   AlertCircle,
   Image as ImageIcon,
   ExternalLink,
+  Trash2,
+  Trash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +78,8 @@ export default function AdminApplicationsPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
   const [expandedApp, setExpandedApp] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     fetchApplications();
@@ -109,6 +113,21 @@ export default function AdminApplicationsPage() {
     }
   };
 
+  const handleClearProcessed = async () => {
+    setIsClearing(true);
+    try {
+      const res = await api.delete<any>("/admin/applications/clear-processed");
+      alert(res.message || "Ko'rib chiqilgan arizalar muvaffaqiyatli o'chirildi.");
+      setShowClearConfirm(false);
+      await fetchApplications();
+    } catch (error: any) {
+      console.error("Error clearing applications:", error);
+      alert(error.message || "Tozalashda xatolik yuz berdi.");
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const filteredApplications = applications.filter(
     (app) =>
       app.field_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,7 +155,15 @@ export default function AdminApplicationsPage() {
             Maydon egalaridan kelgan arizalarni ko'rib chiqing, tasdiqlang yoki rad eting.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setShowClearConfirm(true)}
+            className="rounded-full px-4 h-9 text-xs font-bold border-rose-100 text-rose-500 hover:bg-rose-50 gap-2 font-black uppercase tracking-widest"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Tozalash
+          </Button>
           <Badge className="rounded-full px-4 py-2 text-sm font-bold bg-primary/10 text-primary border-none">
             <FileText className="w-4 h-4 mr-2" />
             {filteredApplications.length} ta ariza
@@ -434,6 +461,41 @@ export default function AdminApplicationsPage() {
               </Button>
             )}
           </div>
+        </div>
+      )}
+      {/* Clear Confirmation Dialog */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-300">
+              <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto">
+                 <Trash2 className="w-10 h-10 text-rose-500" />
+              </div>
+              <div className="space-y-2">
+                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Arxivni tozalash?</h3>
+                 <p className="text-sm text-muted-foreground font-medium">
+                    Siz haqiqatdan ham barcha tasdiqlangan va rad etilgan arizalar tarixini (loglarni) o'chirib tashlamoqchimisiz?
+                 </p>
+                 <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest pt-2">
+                    Kutilayotgan arizalar o'chirilmaydi!
+                 </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button 
+                   onClick={handleClearProcessed}
+                   disabled={isClearing}
+                   className="w-full h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 font-bold"
+                >
+                   {isClearing ? "Tozalanmoqda..." : "Ha, arxivni tozalash"}
+                </Button>
+                <Button
+                   variant="ghost"
+                   onClick={() => setShowClearConfirm(false)}
+                   className="w-full h-12 rounded-2xl font-bold text-slate-400"
+                >
+                   Bekor qilish
+                </Button>
+              </div>
+           </div>
         </div>
       )}
     </div>

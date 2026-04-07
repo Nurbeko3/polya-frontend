@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Field, BookingSlot } from "@/types";
@@ -24,6 +25,7 @@ import {
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
 import { API_URL } from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
 
 
 const fieldIcons: Record<string, string> = {
@@ -47,12 +49,14 @@ export default function FieldDetailPage() {
 
   const [field, setField] = useState<Field | null>(null);
   const [slots, setSlots] = useState<BookingSlot[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedSlots, setSelectedSlots] = useState<BookingSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const { user, isAuthenticated } = useAuthStore();
 
   const fetchField = useCallback(async () => {
     setIsLoading(true);
@@ -73,7 +77,12 @@ export default function FieldDetailPage() {
     if (!selectedDate || !fieldId) return;
     setSlotsLoading(true);
     try {
-      const dateStr = selectedDate.toISOString().split("T")[0];
+      // Timezone shift muammosini tuzatish: yyyy-MM-dd formatida local vaqt bilan olish
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
       const response = await fetch(`${API_URL}/bookings/slots/${fieldId}?date=${dateStr}`);
       if (response.ok) {
         const data = await response.json();
@@ -110,15 +119,22 @@ export default function FieldDetailPage() {
   };
 
   const handleBookSlot = () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Iltimos, avval tizimga kiring!", {
+        description: "Bron qilish uchun ro'yxatdan o'tishingiz yoki tizimga kirishingiz kerak."
+      });
+      // Optionally redirect to login or show auth dialog
+      return;
+    }
     setShowPaymentDialog(true);
   };
 
   const handlePaymentSelect = async (method: "click" | "payme") => {
-    if (selectedSlots.length === 0 || !field) return;
+    if (selectedSlots.length === 0 || !field || !user) return;
 
     setPaymentLoading(true);
     try {
-      const userId = 1;
+      const userId = user.id;
       let firstPaymentUrl = "";
       
       for (const slot of selectedSlots) {
@@ -152,14 +168,16 @@ export default function FieldDetailPage() {
       if (firstPaymentUrl) {
         window.location.href = firstPaymentUrl;
       } else {
-        alert("Bron muvaffaqiyatli amalga oshirildi!");
+        toast.success("Bron muvaffaqiyatli amalga oshirildi!");
         setShowPaymentDialog(false);
         fetchSlots();
         setSelectedSlots([]);
       }
     } catch (error) {
       console.error("Error booking:", error);
-      alert("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
+      toast.error("Xatolik yuz berdi", {
+        description: "Iltimos, qayta urinib ko'ring.",
+      });
     } finally {
       setPaymentLoading(false);
     }
