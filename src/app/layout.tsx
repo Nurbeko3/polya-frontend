@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-
 import { Toaster } from "sonner";
+import { ConfigProvider } from "antd";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,10 +20,20 @@ export default function RootLayout({
   return (
     <html lang="uz" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider defaultTheme="light" storageKey="polya-theme">
-          {children}
-          <Toaster position="top-right" richColors closeButton />
-        </ThemeProvider>
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: "#2563eb",
+              borderRadius: 8,
+              fontFamily: inter.style.fontFamily,
+            },
+          }}
+        >
+          <ThemeProvider defaultTheme="light" storageKey="polya-theme">
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </ThemeProvider>
+        </ConfigProvider>
       </body>
     </html>
   );
