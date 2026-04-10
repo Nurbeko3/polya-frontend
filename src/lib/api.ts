@@ -135,13 +135,27 @@ class ApiClient {
     return !!this.token;
   }
 
-  async getMyBookings(userId: number): Promise<UserBookingsResponse> {
-    return this.request<UserBookingsResponse>(`/bookings/my-bookings?user_id=${userId}`);
+  async getMyBookings(): Promise<UserBookingsResponse> {
+    return this.request<UserBookingsResponse>(`/bookings/my-bookings`);
   }
 
-  async cancelBooking(slotId: number, userId: number): Promise<{ success: boolean }> {
-    return this.request<{ success: boolean }>(`/bookings/${slotId}?user_id=${userId}`, {
+  async cancelBooking(slotId: number): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>(`/bookings/${slotId}`, {
       method: "DELETE",
+    });
+  }
+
+  async lockSlot(slotId: number): Promise<BookingLockResponse> {
+    return this.request<BookingLockResponse>("/bookings/lock", {
+      method: "POST",
+      body: JSON.stringify({ slot_id: slotId }),
+    });
+  }
+
+  async confirmBooking(slotId: number, lockToken: string, paymentMethod: string): Promise<BookingConfirmResponse> {
+    return this.request<BookingConfirmResponse>("/bookings/confirm", {
+      method: "POST",
+      body: JSON.stringify({ slot_id: slotId, lock_token: lockToken, payment_method: paymentMethod }),
     });
   }
 

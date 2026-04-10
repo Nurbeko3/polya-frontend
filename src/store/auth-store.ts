@@ -41,7 +41,13 @@ export const useAuthStore = create<AuthState>()(
 
           if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.detail || "Login failed");
+            let errorMsg = "Login failed";
+            if (typeof error.detail === "string") {
+              errorMsg = error.detail;
+            } else if (Array.isArray(error.detail)) {
+              errorMsg = error.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(", ");
+            }
+            throw new Error(errorMsg);
           }
 
           const data = await response.json();

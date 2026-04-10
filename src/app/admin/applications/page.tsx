@@ -2,30 +2,21 @@
 
 import { useEffect, useState } from "react";
 import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  MapPin,
-  Phone,
-  Banknote,
-  CalendarCheck,
-  FileText,
-  Search,
-  Filter,
-  Eye,
-  ChevronDown,
-  Sparkles,
-  AlertCircle,
-  Image as ImageIcon,
-  ExternalLink,
-  Trash2,
-  Trash,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+  Card, Button, Input, Tag, Space, Typography, Row, Col, Table, Avatar,
+  message, Modal, Descriptions, Tooltip, Badge,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import {
+  SearchOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
+  EnvironmentOutlined, PhoneOutlined, CalendarOutlined, DollarOutlined,
+  DeleteOutlined, ExclamationCircleOutlined, FileTextOutlined, ReloadOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import { API_URL, api } from "@/lib/api";
+
+const { Text } = Typography;
+const { Search } = Input;
+const { confirm } = Modal;
 
 interface Application {
   id: number;
@@ -41,59 +32,37 @@ interface Application {
   created_at: string;
 }
 
-const fieldTypeLabels: Record<string, { label: string; emoji: string; color: string }> = {
-  football: { label: "Futbol", emoji: "⚽", color: "bg-green-500" },
-  tennis: { label: "Tennis", emoji: "🎾", color: "bg-teal-500" },
-  basketball: { label: "Basketbol", emoji: "🏀", color: "bg-orange-500" },
-  volleyball: { label: "Voleybol", emoji: "🏐", color: "bg-pink-500" },
+const fieldTypeConfig: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  football:   { label: "Futbol",    emoji: "⚽", color: "#059669", bg: "#f0fdf4" },
+  tennis:     { label: "Tennis",    emoji: "🎾", color: "#0891b2", bg: "#ecfeff" },
+  basketball: { label: "Basketbol", emoji: "🏀", color: "#d97706", bg: "#fffbeb" },
+  volleyball: { label: "Voleybol",  emoji: "🏐", color: "#7c3aed", bg: "#f5f3ff" },
 };
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  pending: {
-    label: "Kutilmoqda",
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20",
-    icon: Clock,
-  },
-  approved: {
-    label: "Tasdiqlangan",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20",
-    icon: CheckCircle2,
-  },
-  rejected: {
-    label: "Rad etilgan",
-    color: "text-rose-600 dark:text-rose-400",
-    bg: "bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20",
-    icon: XCircle,
-  },
+const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  pending:  { label: "Kutilmoqda",   color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+  approved: { label: "Tasdiqlangan", color: "#059669", bg: "#f0fdf4", border: "#bbf7d0" },
+  rejected: { label: "Rad etilgan",  color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
 };
-
-type FilterStatus = "all" | "pending" | "approved" | "rejected";
 
 export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
-  const [expandedApp, setExpandedApp] = useState<number | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>("pending");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [isClearing, setIsClearing] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [detailApp, setDetailApp] = useState<Application | null>(null);
 
-  useEffect(() => {
-    fetchApplications();
-  }, [filterStatus]);
+  useEffect(() => { fetchApplications(); }, [filterStatus]);
 
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      const statusParam = filterStatus !== "all" ? `?status=${filterStatus}` : "";
-      const data = await api.get<Application[]>(`/admin/applications${statusParam}`);
+      const param = filterStatus !== "all" ? `?status=${filterStatus}` : "";
+      const data = await api.get<Application[]>(`/admin/applications${param}`);
       setApplications(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      setApplications([]);
+    } catch {
+      message.error("Arizalarni yuklashda xatolik");
     } finally {
       setIsLoading(false);
     }
@@ -103,401 +72,355 @@ export default function AdminApplicationsPage() {
     setActionLoading(id);
     try {
       await api.post(`/admin/applications/${id}/${action}`);
-      setApplications((apps) => apps.filter((app) => app.id !== id));
-      setExpandedApp(null);
+      setApplications((apps) => apps.filter((a) => a.id !== id));
+      setDetailApp(null);
+      message.success(action === "approve" ? "✅ Ariza tasdiqlandi va maydon yaratildi" : "Ariza rad etildi");
     } catch (error: any) {
-      console.error(`Error ${action}ing application:`, error);
-      alert(error.message || "Xatolik yuz berdi.");
+      message.error(error.message || "Xatolik yuz berdi");
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleClearProcessed = async () => {
-    setIsClearing(true);
-    try {
-      const res = await api.delete<any>("/admin/applications/clear-processed");
-      alert(res.message || "Ko'rib chiqilgan arizalar muvaffaqiyatli o'chirildi.");
-      setShowClearConfirm(false);
-      await fetchApplications();
-    } catch (error: any) {
-      console.error("Error clearing applications:", error);
-      alert(error.message || "Tozalashda xatolik yuz berdi.");
-    } finally {
-      setIsClearing(false);
-    }
+  const showClearConfirm = () => {
+    confirm({
+      title: "Arxivni tozalash",
+      icon: <ExclamationCircleOutlined style={{ color: "#ef4444" }} />,
+      content: "Ko'rib chiqilgan barcha arizalar o'chiriladi. Bu amalni qaytarib bo'lmaydi.",
+      okText: "Ha, tozalash",
+      okType: "danger",
+      cancelText: "Bekor",
+      onOk: async () => {
+        try {
+          await api.delete<any>("/admin/applications/clear-processed");
+          message.success("Arxiv tozalandi");
+          fetchApplications();
+        } catch (error: any) {
+          message.error(error.message || "Xatolik");
+        }
+      },
+    });
   };
 
-  const filteredApplications = applications.filter(
-    (app) =>
-      app.field_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredApplications = applications.filter((app) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      app.field_name.toLowerCase().includes(q) ||
+      app.city.toLowerCase().includes(q) ||
       app.phone_number.includes(searchQuery) ||
-      app.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      app.address.toLowerCase().includes(q)
+    );
+  });
 
-  const statusFilters: { key: FilterStatus; label: string; icon: any }[] = [
-    { key: "pending", label: "Kutilmoqda", icon: Clock },
-    { key: "approved", label: "Tasdiqlangan", icon: CheckCircle2 },
-    { key: "rejected", label: "Rad etilgan", icon: XCircle },
-    { key: "all", label: "Barchasi", icon: FileText },
+  const filterButtons = [
+    { key: "pending",  label: "Kutilmoqda",   color: "#d97706", bg: "#fffbeb" },
+    { key: "approved", label: "Tasdiqlangan", color: "#059669", bg: "#f0fdf4" },
+    { key: "rejected", label: "Rad etilgan",  color: "#dc2626", bg: "#fef2f2" },
+  ];
+
+  const columns: ColumnsType<Application> = [
+    {
+      title: "Maydon",
+      key: "field",
+      render: (_, record) => {
+        const cfg = fieldTypeConfig[record.field_type];
+        const imgSrc = record.image_url
+          ? record.image_url.startsWith("http") ? record.image_url : `${API_URL.replace("/api/v1", "")}${record.image_url}`
+          : undefined;
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar
+              size={48} shape="square"
+              src={imgSrc}
+              style={{ borderRadius: 10, background: cfg?.bg || "#f1f5f9", fontSize: 22, flexShrink: 0 }}
+            >
+              {cfg?.emoji || "🏟️"}
+            </Avatar>
+            <div>
+              <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 14 }}>{record.field_name}</div>
+              <span style={{
+                display: "inline-block", marginTop: 2,
+                background: cfg?.bg, color: cfg?.color,
+                fontSize: 11, fontWeight: 600, padding: "1px 8px", borderRadius: 20,
+              }}>
+                {cfg?.emoji} {cfg?.label}
+              </span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Manzil",
+      key: "location",
+      render: (_, record) => (
+        <div>
+          <div style={{ fontWeight: 600, color: "#334155", fontSize: 13 }}>
+            <EnvironmentOutlined style={{ color: "#6366f1", marginRight: 4 }} />
+            {record.city}
+          </div>
+          <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{record.address}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Narx",
+      dataIndex: "price_per_hour",
+      key: "price_per_hour",
+      render: (price) => (
+        <div>
+          <span style={{ fontWeight: 700, color: "#0f172a", fontSize: 14 }}>{price.toLocaleString()}</span>
+          <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 4 }}>UZS/soat</span>
+        </div>
+      ),
+      sorter: (a, b) => a.price_per_hour - b.price_per_hour,
+    },
+    {
+      title: "Telefon",
+      dataIndex: "phone_number",
+      key: "phone",
+      render: (phone) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <PhoneOutlined style={{ color: "#6366f1", fontSize: 12 }} />
+          <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{phone}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Sana",
+      dataIndex: "created_at",
+      key: "created_at",
+      render: (date) => (
+        <span style={{ fontSize: 12, color: "#94a3b8" }}>
+          {new Date(date).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" })}
+        </span>
+      ),
+    },
+    {
+      title: "Amallar",
+      key: "actions",
+      render: (_, record) => (
+        <Space size={6}>
+          <Tooltip title="Batafsil ko'rish">
+            <Button
+              type="text" size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setDetailApp(record)}
+              style={{ color: "#6366f1", background: "#f5f3ff", borderRadius: 8, width: 32, height: 32 }}
+            />
+          </Tooltip>
+          {record.status === "pending" && (
+            <>
+              <Tooltip title="Tasdiqlash">
+                <Button
+                  type="text" size="small"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleAction(record.id, "approve")}
+                  loading={actionLoading === record.id}
+                  style={{ color: "#059669", background: "#f0fdf4", borderRadius: 8, width: 32, height: 32 }}
+                />
+              </Tooltip>
+              <Tooltip title="Rad etish">
+                <Button
+                  type="text" size="small" danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => handleAction(record.id, "reject")}
+                  loading={actionLoading === record.id}
+                  style={{ background: "#fef2f2", borderRadius: 8, width: 32, height: 32 }}
+                />
+              </Tooltip>
+            </>
+          )}
+        </Space>
+      ),
+    },
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div style={{
+        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        borderRadius: 16, padding: "24px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        boxShadow: "0 4px 20px rgba(245,158,11,0.3)",
+      }}>
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Maydon Arizalari
-          </h2>
-          <p className="text-muted-foreground dark:text-slate-400 mt-2 font-medium">
-            Maydon egalaridan kelgan arizalarni ko'rib chiqing, tasdiqlang yoki rad eting.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setShowClearConfirm(true)}
-            className="rounded-full px-4 h-9 text-xs font-bold border-rose-100 text-rose-500 hover:bg-rose-50 gap-2 font-black uppercase tracking-widest"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Tozalash
-          </Button>
-          <Badge className="rounded-full px-4 py-2 text-sm font-bold bg-primary/10 text-primary border-none">
-            <FileText className="w-4 h-4 mr-2" />
-            {filteredApplications.length} ta ariza
-          </Badge>
-        </div>
-      </div>
-
-      {/* Filters Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-[28px] border dark:border-slate-800 p-5 shadow-sm space-y-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Maydon nomi, shahar, manzil yoki telefon bo'yicha qidirish..."
-            className="pl-12 rounded-2xl h-12 bg-slate-50 dark:bg-slate-800/50 border-none text-base"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Status Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {statusFilters.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setFilterStatus(key)}
-              className={cn(
-                "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all whitespace-nowrap",
-                filterStatus === key
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
-                  : "bg-slate-50 dark:bg-slate-800/50 text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Applications List */}
-      {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-white dark:bg-slate-900 rounded-[28px] border dark:border-slate-800 animate-pulse"
-            />
-          ))}
-        </div>
-      ) : filteredApplications.length > 0 ? (
-        <div className="space-y-4">
-          {filteredApplications.map((app) => {
-            const isExpanded = expandedApp === app.id;
-            const typeInfo = fieldTypeLabels[app.field_type] || {
-              label: app.field_type,
-              emoji: "🏟️",
-              color: "bg-slate-500",
-            };
-            const status = statusConfig[app.status] || statusConfig.pending;
-            const StatusIcon = status.icon;
-
-            return (
-              <div
-                key={app.id}
-                className={cn(
-                  "bg-white dark:bg-slate-900 rounded-[28px] border dark:border-slate-800 overflow-hidden shadow-sm transition-all duration-300",
-                  isExpanded && "shadow-xl ring-2 ring-primary/20"
-                )}
-              >
-                {/* Main Row */}
-                <div
-                  className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-6 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
-                  onClick={() => setExpandedApp(isExpanded ? null : app.id)}
-                >
-                  <div className="flex items-center gap-5">
-                    {/* Image */}
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 relative group">
-                      {app.image_url ? (
-                        <img
-                          src={app.image_url}
-                          alt={app.field_name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                          {typeInfo.emoji}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">
-                          {app.field_name}
-                        </h4>
-                        <span
-                          className={cn(
-                            "text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest text-white",
-                            typeInfo.color
-                          )}
-                        >
-                          {typeInfo.emoji} {typeInfo.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {app.city}, {app.address}
-                        </span>
-                        <span className="flex items-center gap-1.5 font-bold text-primary">
-                          <Banknote className="w-3.5 h-3.5" />
-                          {app.price_per_hour.toLocaleString()} UZS/soat
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Side */}
-                  <div className="flex items-center gap-3 lg:flex-shrink-0">
-                    <div
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-2xl border text-sm font-bold",
-                        status.bg,
-                        status.color
-                      )}
-                    >
-                      <StatusIcon className="w-4 h-4" />
-                      {status.label}
-                    </div>
-                    <ChevronDown
-                      className={cn(
-                        "w-5 h-5 text-slate-400 transition-transform",
-                        isExpanded && "rotate-180"
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Expanded Detail */}
-                {isExpanded && (
-                  <div className="border-t dark:border-slate-800 animate-in slide-in-from-top-2 duration-300">
-                    <div className="p-6 bg-slate-50/50 dark:bg-slate-800/20 space-y-6">
-                      {/* Details Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">
-                            Telefon
-                          </p>
-                          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                            <Phone className="w-4 h-4 text-primary" />
-                            {app.phone_number}
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">
-                            Shahar
-                          </p>
-                          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                            <MapPin className="w-4 h-4 text-primary" />
-                            {app.city}
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">
-                            Narx
-                          </p>
-                          <div className="flex items-center gap-2 font-bold text-primary">
-                            <Banknote className="w-4 h-4" />
-                            {app.price_per_hour.toLocaleString()} UZS
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">
-                            Ariza sanasi
-                          </p>
-                          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                            <CalendarCheck className="w-4 h-4 text-primary" />
-                            {new Date(app.created_at).toLocaleDateString("uz-UZ", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      {app.description && (
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">
-                            Tavsif
-                          </p>
-                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                            {app.description}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Image Preview */}
-                      {app.image_url && (
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border dark:border-slate-800">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
-                            Maydon rasmi
-                          </p>
-                          <div className="relative rounded-2xl overflow-hidden h-48 sm:h-64">
-                            <img
-                              src={app.image_url}
-                              alt={app.field_name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Address Detail */}
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border dark:border-slate-800">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">
-                          To'liq manzil
-                        </p>
-                        <p className="text-slate-700 dark:text-slate-300 font-medium">{app.address}</p>
-                      </div>
-
-                      {/* Actions */}
-                      {app.status === "pending" && (
-                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAction(app.id, "approve");
-                            }}
-                            disabled={actionLoading === app.id}
-                            className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-600/20 font-bold text-base gap-2 transition-all hover:scale-[1.02] active:scale-95"
-                          >
-                            {actionLoading === app.id ? (
-                              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-5 h-5" />
-                            )}
-                            Tasdiqlash va maydon yaratish
-                          </Button>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAction(app.id, "reject");
-                            }}
-                            disabled={actionLoading === app.id}
-                            variant="outline"
-                            className="flex-1 h-14 rounded-2xl border-rose-200 dark:border-rose-500/20 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-300 font-bold text-base gap-2 transition-all"
-                          >
-                            <XCircle className="w-5 h-5" />
-                            Rad etish
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-[32px] border dark:border-slate-800 shadow-sm">
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
-              {filterStatus === "pending" ? (
-                <Sparkles className="h-10 w-10 text-emerald-500/30" />
-              ) : (
-                <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600" />
-              )}
-            </div>
-            <h4 className="text-xl font-bold text-slate-900 dark:text-white">
-              {filterStatus === "pending"
-                ? "Hammasi ko'rib chiqilgan! ✨"
-                : searchQuery
-                ? "Qidiruv bo'yicha natija topilmadi"
-                : "Arizalar mavjud emas"}
-            </h4>
-            <p className="text-muted-foreground dark:text-slate-500 mt-2 max-w-sm mx-auto">
-              {filterStatus === "pending"
-                ? "Hozircha kutilayotgan yangi arizalar mavjud emas. Yangi ariza kelganda siz bildirishnoma olasiz."
-                : searchQuery
-                ? "Qidiruv parametrlarini o'zgartirib ko'ring."
-                : "Bu kategoriyada hech qanday ariza yo'q."}
-            </p>
-            {searchQuery && (
-              <Button
-                variant="outline"
-                className="mt-6 rounded-xl"
-                onClick={() => setSearchQuery("")}
-              >
-                Qidiruvni tozalash
-              </Button>
-            )}
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Maydon Arizalari</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
+            Maydon egalaridan kelgan arizalarni ko'rib chiqing
           </div>
         </div>
-      )}
-      {/* Clear Confirmation Dialog */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-           <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 max-w-sm w-full shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-300">
-              <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto">
-                 <Trash2 className="w-10 h-10 text-rose-500" />
-              </div>
-              <div className="space-y-2">
-                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Arxivni tozalash?</h3>
-                 <p className="text-sm text-muted-foreground font-medium">
-                    Siz haqiqatdan ham barcha tasdiqlangan va rad etilgan arizalar tarixini (loglarni) o'chirib tashlamoqchimisiz?
-                 </p>
-                 <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest pt-2">
-                    Kutilayotgan arizalar o'chirilmaydi!
-                 </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Button 
-                   onClick={handleClearProcessed}
-                   disabled={isClearing}
-                   className="w-full h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 font-bold"
+        <Space>
+          <Button
+            icon={<ReloadOutlined />} onClick={fetchApplications} loading={isLoading}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+          />
+          <Button
+            danger icon={<DeleteOutlined />} onClick={showClearConfirm}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 10, height: 40 }}
+          >
+            Arxivni tozalash
+          </Button>
+        </Space>
+      </div>
+
+      {/* Search & Filter */}
+      <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0" }} styles={{ body: { padding: "16px 20px" } }}>
+        <Row gutter={[16, 12]} align="middle">
+          <Col xs={24} md={12}>
+            <Search
+              placeholder="Maydon nomi, shahar yoki telefon..."
+              allowClear size="large"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ borderRadius: 10 }}
+            />
+          </Col>
+          <Col xs={24} md={12}>
+            <Space wrap>
+              {filterButtons.map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => setFilterStatus(btn.key)}
+                  style={{
+                    padding: "6px 16px", borderRadius: 20,
+                    border: filterStatus === btn.key ? `1.5px solid ${btn.color}` : "1.5px solid #e2e8f0",
+                    background: filterStatus === btn.key ? btn.bg : "#fff",
+                    color: filterStatus === btn.key ? btn.color : "#64748b",
+                    fontWeight: 600, fontSize: 13, cursor: "pointer",
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                  }}
                 >
-                   {isClearing ? "Tozalanmoqda..." : "Ha, arxivni tozalash"}
-                </Button>
-                <Button
-                   variant="ghost"
-                   onClick={() => setShowClearConfirm(false)}
-                   className="w-full h-12 rounded-2xl font-bold text-slate-400"
-                >
-                   Bekor qilish
-                </Button>
+                  {btn.key === "pending" && <ClockCircleOutlined />}
+                  {btn.key === "approved" && <CheckCircleOutlined />}
+                  {btn.key === "rejected" && <CloseCircleOutlined />}
+                  {btn.label}
+                </button>
+              ))}
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Table */}
+      <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0" }} styles={{ body: { padding: 0 } }}>
+        <Table
+          columns={columns}
+          dataSource={filteredApplications}
+          rowKey="id"
+          loading={isLoading}
+          style={{ borderRadius: 14, overflow: "hidden" }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Jami ${total} ta ariza`,
+            style: { padding: "12px 20px" },
+          }}
+        />
+      </Card>
+
+      {/* Detail Modal */}
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 8,
+              background: "linear-gradient(135deg, #f59e0b, #d97706)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontSize: 14,
+            }}>
+              <FileTextOutlined />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: "#0f172a" }}>Ariza tafsilotlari</div>
+              <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>{detailApp?.field_name}</div>
+            </div>
+          </div>
+        }
+        open={!!detailApp}
+        onCancel={() => setDetailApp(null)}
+        footer={
+          detailApp?.status === "pending" ? (
+            <Space>
+              <Button onClick={() => setDetailApp(null)} style={{ borderRadius: 10 }}>Yopish</Button>
+              <Button
+                danger icon={<CloseCircleOutlined />}
+                onClick={() => detailApp && handleAction(detailApp.id, "reject")}
+                loading={actionLoading === detailApp?.id}
+                style={{ borderRadius: 10 }}
+              >
+                Rad etish
+              </Button>
+              <Button
+                type="primary" icon={<CheckCircleOutlined />}
+                onClick={() => detailApp && handleAction(detailApp.id, "approve")}
+                loading={actionLoading === detailApp?.id}
+                style={{ background: "linear-gradient(135deg, #10b981, #059669)", border: "none", borderRadius: 10, fontWeight: 600 }}
+              >
+                Tasdiqlash va maydon yaratish
+              </Button>
+            </Space>
+          ) : (
+            <Button onClick={() => setDetailApp(null)} style={{ borderRadius: 10 }}>Yopish</Button>
+          )
+        }
+        width={600}
+        styles={{ header: { borderBottom: "1px solid #f1f5f9", paddingBottom: 16 } }}
+      >
+        {detailApp && (
+          <div style={{ marginTop: 16 }}>
+            {detailApp.image_url && (
+              <div style={{ marginBottom: 16, borderRadius: 12, overflow: "hidden", height: 200 }}>
+                <img
+                  src={detailApp.image_url.startsWith("http") ? detailApp.image_url : `${API_URL.replace("/api/v1", "")}${detailApp.image_url}`}
+                  alt="field"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </div>
-           </div>
-        </div>
-      )}
-    </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              {[
+                { icon: <EnvironmentOutlined />, label: "Shahar", value: detailApp.city },
+                { icon: <PhoneOutlined />, label: "Telefon", value: detailApp.phone_number },
+                { icon: <DollarOutlined />, label: "Narx", value: `${detailApp.price_per_hour.toLocaleString()} UZS/soat` },
+                { icon: <CalendarOutlined />, label: "Yuborilgan", value: new Date(detailApp.created_at).toLocaleDateString("uz-UZ") },
+              ].map((item) => (
+                <div key={item.label} style={{
+                  background: "#f8fafc", borderRadius: 10, padding: "12px 14px",
+                  border: "1px solid #f1f5f9",
+                }}>
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ color: "#6366f1" }}>{item.icon}</span> {item.label}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 14px", border: "1px solid #f1f5f9", marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>Manzil</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{detailApp.address}</div>
+            </div>
+            {detailApp.description && (
+              <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 14px", border: "1px solid #f1f5f9" }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>Tavsif</div>
+                <div style={{ fontSize: 14, color: "#334155", lineHeight: 1.5 }}>{detailApp.description}</div>
+              </div>
+            )}
+            {detailApp.status !== "pending" && (
+              <div style={{ marginTop: 12 }}>
+                <span style={{
+                  background: statusConfig[detailApp.status]?.bg,
+                  color: statusConfig[detailApp.status]?.color,
+                  border: `1px solid ${statusConfig[detailApp.status]?.border}`,
+                  fontSize: 13, fontWeight: 600, padding: "5px 16px", borderRadius: 20,
+                }}>
+                  {statusConfig[detailApp.status]?.label}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+    </Space>
   );
 }

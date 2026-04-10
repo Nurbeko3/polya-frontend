@@ -3,135 +3,148 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Form, Input, Button, message } from "antd";
 import { useAuthStore } from "@/store/auth-store";
-import { ShieldCheck, Eye, EyeOff, User, Lock, ArrowRight } from "lucide-react";
+import { UserOutlined, LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
 
 export default function AdminLoginPage() {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const { login, isLoading } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuthStore();
   const router = useRouter();
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
+  const handleSubmit = async (values: { phone: string; password: string }) => {
+    setLoading(true);
     try {
-      await login(phone, password);
+      await login(values.phone, values.password);
+      message.success("Tizimga muvaffaqiyatli kirdingiz!");
       router.push("/admin");
     } catch (err: any) {
-      console.error("Login error:", err);
-      // Handle cases where err.message might be an object or undefined
-      const errorMessage = typeof err.message === 'string' 
-        ? err.message 
-        : (err.detail || "Telefon raqami yoki parol noto'g'ri");
-      setError(errorMessage);
+      message.error(typeof err.message === "string" ? err.message : "Telefon raqami yoki parol noto'g'ri");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px]" />
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Background decorations */}
+      <div style={{ position: "absolute", top: -80, right: -80, width: 300, height: 300, borderRadius: "50%", background: "rgba(99,102,241,0.15)" }} />
+      <div style={{ position: "absolute", bottom: -100, left: -60, width: 250, height: 250, borderRadius: "50%", background: "rgba(99,102,241,0.1)" }} />
+      <div style={{ position: "absolute", top: "30%", left: "10%", width: 80, height: 80, borderRadius: "50%", background: "rgba(129,140,248,0.08)" }} />
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo & Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary to-purple-600 shadow-2xl shadow-primary/30 mb-6">
-            <ShieldCheck className="w-10 h-10 text-white" />
+      <div style={{ width: "100%", maxWidth: 420, position: "relative" }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{
+            display: "inline-flex",
+            width: 64, height: 64, borderRadius: 18,
+            background: "linear-gradient(135deg, #6366f1, #818cf8)",
+            alignItems: "center", justifyContent: "center",
+            boxShadow: "0 8px 32px rgba(99,102,241,0.5)",
+            marginBottom: 20,
+          }}>
+            <span style={{ color: "#fff", fontWeight: 900, fontSize: 28 }}>P</span>
           </div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight">Admin Panel</h1>
-          <p className="text-slate-400 mt-2 font-medium">
-            Tizimga kirish uchun ma'lumotlaringizni kiriting
-          </p>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Admin Panel</div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)" }}>
+            Polya boshqaruv tizimiga kirish
+          </div>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[40px] p-10 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">
-                Loginingiz
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <User className="w-5 h-5 text-white/20" />
-                </div>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Admin"
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all font-medium"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">
-                Parol
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-white/20" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full h-14 pl-12 pr-14 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all font-medium"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl px-5 py-3 animate-in fade-in slide-in-from-top-2">
-                <p className="text-sm text-rose-400 font-medium">{error}</p>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-primary/30 group transition-all hover:scale-[1.02] active:scale-95"
+        {/* Card */}
+        <div style={{
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 20,
+          padding: 32,
+          backdropFilter: "blur(20px)",
+        }}>
+          <Form form={form} onFinish={handleSubmit} layout="vertical" requiredMark={false} size="large">
+            <Form.Item
+              name="phone"
+              label={<span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Telefon raqam</span>}
+              rules={[{ required: true, message: "Telefon raqamingizni kiriting" }]}
             >
-              {isLoading ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Kuting...
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  Kirish
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              )}
-            </Button>
-          </form>
+              <Input
+                prefix={<UserOutlined style={{ color: "rgba(255,255,255,0.4)" }} />}
+                placeholder="+998901234567"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 12,
+                  color: "#fff",
+                  height: 48,
+                }}
+              />
+            </Form.Item>
 
+            <Form.Item
+              name="password"
+              label={<span style={{ color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Parol</span>}
+              rules={[{ required: true, message: "Parolingizni kiriting" }]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: "rgba(255,255,255,0.4)" }} />}
+                placeholder="••••••••"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 12,
+                  color: "#fff",
+                  height: 48,
+                }}
+              />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+                icon={<ArrowRightOutlined />}
+                iconPosition="end"
+                style={{
+                  height: 50,
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+                  border: "none",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  boxShadow: "0 4px 20px rgba(99,102,241,0.4)",
+                }}
+              >
+                Tizimga kirish
+              </Button>
+            </Form.Item>
+          </Form>
         </div>
 
-        <div className="text-center mt-8">
-          <Link href="/" className="text-xs text-white/20 hover:text-white/40 font-bold uppercase tracking-[0.2em] transition-colors">
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <Link href="/" style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, textDecoration: "none" }}>
             ← Bosh sahifaga qaytish
           </Link>
         </div>
       </div>
+
+      <style>{`
+        .ant-input { color: #fff !important; }
+        .ant-input::placeholder { color: rgba(255,255,255,0.3) !important; }
+        .ant-input-password .ant-input { color: #fff !important; }
+        .ant-input-affix-wrapper { background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.15) !important; }
+        .ant-input-affix-wrapper:hover, .ant-input-affix-wrapper:focus-within { border-color: rgba(99,102,241,0.6) !important; }
+        .ant-input-password-icon { color: rgba(255,255,255,0.4) !important; }
+      `}</style>
     </div>
   );
 }

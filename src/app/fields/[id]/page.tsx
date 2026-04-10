@@ -24,7 +24,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
-import { API_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 
 
@@ -61,11 +61,8 @@ export default function FieldDetailPage() {
   const fetchField = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/fields/${fieldId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setField(data);
-      }
+      const data = await api.get<Field>(`/fields/${fieldId}`);
+      setField(data);
     } catch (error) {
       console.error("Error fetching field:", error);
     } finally {
@@ -83,11 +80,8 @@ export default function FieldDetailPage() {
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
       
-      const response = await fetch(`${API_URL}/bookings/slots/${fieldId}?date=${dateStr}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSlots(data.slots || []);
-      }
+      const data = await api.get<{ slots: BookingSlot[] }>(`/bookings/slots/${fieldId}?date=${dateStr}`);
+      setSlots(data.slots || []);
     } catch (error) {
       console.error("Error fetching slots:", error);
       setSlots([]);
@@ -133,32 +127,15 @@ export default function FieldDetailPage() {
     if (selectedSlots.length === 0 || !field || !user) return;
 
     setPaymentLoading(true);
+    let firstPaymentUrl = "";
+
     try {
-      const userId = user.id;
-      let firstPaymentUrl = "";
-      
       for (const slot of selectedSlots) {
-        const lockResponse = await fetch(`${API_URL}/bookings/lock?user_id=${userId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slot_id: slot.id }),
-        });
+        // Lock the slot — uses JWT auth via api client (no manual user_id needed)
+        const lockData = await api.lockSlot(slot.id);
 
-        if (!lockResponse.ok) throw new Error("Slotni band qilishda xatolik");
-        const lockData = await lockResponse.json();
-
-        const confirmResponse = await fetch(`${API_URL}/bookings/confirm?user_id=${userId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slot_id: slot.id,
-            lock_token: lockData.lock_token,
-            payment_method: method,
-          }),
-        });
-
-        if (!confirmResponse.ok) throw new Error("Bron tasdiqlashda xatolik");
-        const confirmData = await confirmResponse.json();
+        // Confirm (initiate payment) — uses JWT auth via api client
+        const confirmData = await api.confirmBooking(slot.id, lockData.lock_token, method);
 
         if (!firstPaymentUrl && confirmData.payment_url) {
           firstPaymentUrl = confirmData.payment_url;
@@ -173,9 +150,9 @@ export default function FieldDetailPage() {
         fetchSlots();
         setSelectedSlots([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error booking:", error);
-      toast.error("Xatolik yuz berdi", {
+      toast.error(error.message || "Bron qilishda xatolik yuz berdi", {
         description: "Iltimos, qayta urinib ko'ring.",
       });
     } finally {
