@@ -11,6 +11,7 @@ export interface Field {
   longitude: number | null;
   price_per_hour: number;
   image_url: string | null;
+  phone_number: string | null;
   rating: number;
   is_active: boolean;
 }

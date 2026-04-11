@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AuthDialogs } from "@/components/auth-dialogs";
 import { Field, FieldType } from "@/types";
 import { FieldCard } from "@/components/field-card";
 import { SearchFilters } from "@/components/search-filters";
 import { Logo } from "@/components/logo";
 import { AddFieldDialog } from "@/components/add-field-dialog";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
 import { Typography, Card, Row, Col, Button, Spin, Empty, Badge, Space, Divider } from "antd";
@@ -134,38 +133,12 @@ export default function HomePage() {
     return val;
   };
 
-  const HeaderStyle = { 
-    backgroundColor: isDark ? "rgba(10,10,10,0.9)" : "rgba(255,255,255,0.9)", 
-    backdropFilter: "blur(12px)" as const,
-    borderBottom: `1px solid ${colors.border}`
-  };
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.bg }}>
-      {/* Header */}
-      <header className="sticky top-0 z-50" style={HeaderStyle}>
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Logo />
-          
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#fields" style={{ color: colors.textSecondary }}>
-              Maydonlar
-            </a>
-            <Link href="/map" style={{ color: colors.textSecondary, display: "flex", alignItems: "center", gap: 8 }}>
-              <EnvironmentOutlined />
-              Xarita
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <AuthDialogs />
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
-      <section className="py-20" style={{ background: isDark ? "linear-gradient(to bottom, #171717, #0a0a0a)" : "linear-gradient(to bottom, #f9fafb, #ffffff)" }}>
+      <section className="pt-36 pb-20" style={{ background: isDark ? "linear-gradient(to bottom, #171717, #0a0a0a)" : "linear-gradient(to bottom, #f9fafb, #ffffff)" }}>
         <div className="container mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto">
             <Badge style={{ backgroundColor: isDark ? "#1e3a5f" : "#eff6ff", color: "#2563eb" }} className="mb-6">

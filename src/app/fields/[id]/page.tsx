@@ -8,7 +8,6 @@ import { Field, BookingSlot } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotsGrid } from "@/components/time-slots-grid";
-import { PaymentDialog } from "@/components/payment-dialog";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { AddFieldDialog } from "@/components/add-field-dialog";
 import {
@@ -53,8 +52,8 @@ export default function FieldDetailPage() {
   const [selectedSlots, setSelectedSlots] = useState<BookingSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState<{ startTime: string; endTime: string; date: Date } | null>(null);
 
   const { user, isAuthenticated } = useAuthStore();
 
@@ -112,51 +111,36 @@ export default function FieldDetailPage() {
     });
   };
 
-  const handleBookSlot = () => {
+  const handleBookSlot = async () => {
     if (!isAuthenticated || !user) {
       toast.error("Iltimos, avval tizimga kiring!", {
         description: "Bron qilish uchun ro'yxatdan o'tishingiz yoki tizimga kirishingiz kerak."
       });
-      // Optionally redirect to login or show auth dialog
       return;
     }
-    setShowPaymentDialog(true);
-  };
+    if (selectedSlots.length === 0 || !field) return;
 
-  const handlePaymentSelect = async (method: "click" | "payme") => {
-    if (selectedSlots.length === 0 || !field || !user) return;
-
-    setPaymentLoading(true);
-    let firstPaymentUrl = "";
-
+    setBookingLoading(true);
     try {
       for (const slot of selectedSlots) {
-        // Lock the slot — uses JWT auth via api client (no manual user_id needed)
         const lockData = await api.lockSlot(slot.id);
-
-        // Confirm (initiate payment) — uses JWT auth via api client
-        const confirmData = await api.confirmBooking(slot.id, lockData.lock_token, method);
-
-        if (!firstPaymentUrl && confirmData.payment_url) {
-          firstPaymentUrl = confirmData.payment_url;
-        }
+        await api.confirmBooking(slot.id, lockData.lock_token, "naqd");
       }
 
-      if (firstPaymentUrl) {
-        window.location.href = firstPaymentUrl;
-      } else {
-        toast.success("Bron muvaffaqiyatli amalga oshirildi!");
-        setShowPaymentDialog(false);
-        fetchSlots();
-        setSelectedSlots([]);
-      }
+      setBookingSuccess({
+        startTime: selectedSlots[0].start_time,
+        endTime: selectedSlots[selectedSlots.length - 1].end_time,
+        date: selectedDate!,
+      });
+      setSelectedSlots([]);
+      fetchSlots();
     } catch (error: any) {
       console.error("Error booking:", error);
       toast.error(error.message || "Bron qilishda xatolik yuz berdi", {
         description: "Iltimos, qayta urinib ko'ring.",
       });
     } finally {
-      setPaymentLoading(false);
+      setBookingLoading(false);
     }
   };
 
@@ -273,7 +257,7 @@ export default function FieldDetailPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
+            <div id="booking-section" className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
                 <div className="flex items-center justify-between mb-10">
                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -323,7 +307,54 @@ export default function FieldDetailPage() {
                   </div>
                 </div>
 
-                {selectedSlots.length > 0 && (
+                {bookingSuccess && (
+                  <div className="mt-10 bg-emerald-500/10 border border-emerald-500/30 rounded-[40px] p-10 animate-in slide-in-from-top-4">
+                    <div className="flex items-center gap-6 mb-8">
+                      <div className="w-16 h-16 rounded-[24px] bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 shrink-0">
+                        <CheckIcon className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">Bron tasdiqlandi!</p>
+                        <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                          {bookingSuccess.startTime} – {bookingSuccess.endTime} • {formatDate(bookingSuccess.date)}
+                        </h4>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {field.phone_number && (
+                        <a
+                          href={`tel:${field.phone_number}`}
+                          className="flex items-center gap-4 p-5 bg-white dark:bg-white/5 border border-emerald-200 dark:border-emerald-500/20 rounded-[28px] hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                        >
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <PhoneIcon className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Polya egasi bilan bog'laning</p>
+                            <p className="font-black text-slate-900 dark:text-white text-lg">{field.phone_number}</p>
+                          </div>
+                        </a>
+                      )}
+                      <div className="flex items-center gap-4 p-5 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[28px]">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                          <MapPinIcon className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Manzil</p>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">{field.city}, {field.address}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setBookingSuccess(null)}
+                      className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-white/60 transition-colors"
+                    >
+                      Boshqa vaqt bron qilish →
+                    </button>
+                  </div>
+                )}
+
+                {!bookingSuccess && selectedSlots.length > 0 && (
                   <div className="mt-10 bg-primary/10 border border-primary/20 dark:border-primary/10 rounded-[40px] p-10 animate-in slide-in-from-top-4">
                     <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
                        <div className="flex items-center gap-6">
@@ -337,20 +368,30 @@ export default function FieldDetailPage() {
                              </h4>
                           </div>
                        </div>
-                       
+
                        <div className="text-right">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 leading-none">Jami narx</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 leading-none">Taxminiy narx</p>
                           <h4 className="text-4xl font-black text-primary">{formatPrice(field.price_per_hour * selectedSlots.length)}</h4>
                        </div>
                     </div>
-                    
-                    <Button 
-                      className="w-full h-16 mt-10 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 group overflow-hidden relative" 
+
+                    <Button
+                      className="w-full h-16 mt-10 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 group overflow-hidden relative"
                       size="lg"
                       onClick={handleBookSlot}
+                      disabled={bookingLoading}
                     >
-                      <span className="relative z-10">Tasdiqlash va to'lash</span>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
+                      {bookingLoading ? (
+                        <span className="relative z-10 flex items-center gap-3">
+                          <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          Bronlanmoqda...
+                        </span>
+                      ) : (
+                        <>
+                          <span className="relative z-10">Bron qilish</span>
+                          <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
+                        </>
+                      )}
                     </Button>
                   </div>
                 )}
@@ -374,7 +415,7 @@ export default function FieldDetailPage() {
                 {[
                   { icon: MapPinIcon, label: "Manzil", value: field.address, color: "text-blue-500", bg: "bg-blue-500/10" },
                   { icon: ClockIcon, label: "Ish vaqti", value: "08:00 - 22:00", color: "text-purple-500", bg: "bg-purple-500/10" },
-                  { icon: PhoneIcon, label: "Bog'lanish", value: "+998 71 123 45 67", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                  ...(field.phone_number ? [{ icon: PhoneIcon, label: "Polya egasi", value: field.phone_number, color: "text-emerald-500", bg: "bg-emerald-500/10" }] : []),
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-4 p-5 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[28px] transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.04]">
                     <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-black/[0.02]", item.bg)}>
@@ -388,8 +429,14 @@ export default function FieldDetailPage() {
                 ))}
               </div>
 
-              <Button className="w-full mt-10 h-16 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/20" size="lg" onClick={handleBookSlot}>
-                Hoziroq bron qilish
+              <Button
+                className="w-full mt-10 h-16 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/20"
+                size="lg"
+                onClick={() => {
+                  document.getElementById("booking-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Bron qilish
               </Button>
             </div>
 
@@ -411,13 +458,6 @@ export default function FieldDetailPage() {
         </div>
       </div>
 
-      <PaymentDialog
-        isOpen={showPaymentDialog}
-        onClose={() => setShowPaymentDialog(false)}
-        onSelectMethod={handlePaymentSelect}
-        amount={field.price_per_hour * (selectedSlots.length || 1)}
-        isLoading={paymentLoading}
-      />
     </div>
   );
 }

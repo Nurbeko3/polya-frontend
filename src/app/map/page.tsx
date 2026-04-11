@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Field } from "@/types";
-import { ArrowLeftIcon, MapIcon, LocateIcon } from "lucide-react";
+import { ArrowLeftIcon, MapIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";

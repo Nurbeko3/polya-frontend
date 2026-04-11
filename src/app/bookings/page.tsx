@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, BookingSlot, Field } from "@/lib/api";
+import { api, Field } from "@/lib/api";
+import { BookingSlot } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { toast } from "sonner";
 import {
@@ -16,10 +15,11 @@ import {
   ClockIcon,
   MapPinIcon,
   XMarkIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
+  PhoneIcon,
 } from "@heroicons/react/24/outline";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { API_URL } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const fieldIcons: Record<string, string> = {
   football: "⚽",
@@ -28,13 +28,39 @@ const fieldIcons: Record<string, string> = {
   volleyball: "🏐",
 };
 
+const fieldColors: Record<string, string> = {
+  football: "from-green-500 to-emerald-600",
+  tennis: "from-emerald-500 to-teal-600",
+  basketball: "from-orange-500 to-amber-600",
+  volleyball: "from-pink-500 to-rose-600",
+};
+
 interface BookingWithField extends BookingSlot {
   field?: Field;
 }
 
+function formatDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("uz-UZ", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function isUpcoming(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const bookingDate = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return bookingDate >= today;
+}
+
 function BookingSkeleton() {
   return (
-    <div className="h-32 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+    <div className="h-40 rounded-[32px] bg-slate-100 dark:bg-white/5 animate-pulse" />
   );
 }
 
@@ -56,22 +82,24 @@ export default function BookingsPage() {
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      // Token sync kuchaytirish — api client token eng so'nggi bo'lsin
       api.setToken(token);
       const data = await api.getMyBookings();
+
       const bookingsWithFields = await Promise.all(
-        data.bookings.map(async (booking) => {
-          try {
-            const response = await fetch(`${API_URL}/fields/${booking.field_id}`);
-            if (response.ok) {
-              const field = await response.json();
-              return { ...booking, field };
+        data.bookings
+          .filter((b) => b.status === "booked")
+          .map(async (booking) => {
+            try {
+              const response = await fetch(`${API_URL}/fields/${booking.field_id}`);
+              if (response.ok) {
+                const field = await response.json();
+                return { ...booking, field };
+              }
+              return booking;
+            } catch {
+              return booking;
             }
-            return booking;
-          } catch {
-            return booking;
-          }
-        })
+          })
       );
       setBookings(bookingsWithFields);
     } catch (error: any) {
@@ -93,51 +121,47 @@ export default function BookingsPage() {
       setBookings((prev) => prev.filter((b) => b.id !== slotId));
       toast.success("Bron muvaffaqiyatli bekor qilindi");
     } catch (error: any) {
-      console.error("Error cancelling booking:", error);
       toast.error(error.message || "Bronni bekor qilishda xatolik yuz berdi");
     } finally {
       setCancellingId(null);
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("uz-UZ", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const isUpcoming = (date: string) => {
-    const bookingDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return bookingDate >= today;
-  };
-
-  const upcomingBookings = bookings.filter((b) => b.status === "booked" && isUpcoming(b.date));
-  const pastBookings = bookings.filter((b) => b.status === "booked" && !isUpcoming(b.date));
+  const upcomingBookings = bookings.filter((b) => isUpcoming(b.date));
+  const pastBookings = bookings.filter((b) => !isUpcoming(b.date));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="glass dark:glass sticky top-0 z-50 border-b dark:border-slate-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeftIcon className="w-5 h-5" />
-            <span className="text-sm font-medium">Bosh sahifa</span>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-white pb-20">
+      {/* Header */}
+      <header className="glass dark:glass sticky top-0 z-50 border-b border-slate-200 dark:border-white/5">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <Link
+            href="/"
+            className="group flex items-center gap-2 text-slate-400 dark:text-white/40 hover:text-primary transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-all" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Bosh sahifaga</span>
           </Link>
-          <ThemeToggle />
+          <div className="p-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-1 dark:text-white">Mening bronlarim</h1>
+      <div className="container mx-auto px-4 py-10 max-w-3xl">
+        {/* Title */}
+        <div className="mb-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-2">
+            {user?.name}
+          </p>
+          <h1 className="text-4xl font-black uppercase tracking-tighter dark:text-white">
+            Mening bronlarim
+          </h1>
           {!isLoading && (
-            <p className="text-muted-foreground">
-              {bookings.length > 0 ? `${bookings.length} ta bron topildi` : "Hozircha bronlar yo'q"}
+            <p className="text-slate-400 dark:text-white/30 font-bold text-sm mt-2">
+              {bookings.length > 0
+                ? `${bookings.length} ta bron topildi`
+                : "Hozircha bronlar yo'q"}
             </p>
           )}
         </div>
@@ -147,143 +171,204 @@ export default function BookingsPage() {
             {[1, 2, 3].map((i) => <BookingSkeleton key={i} />)}
           </div>
         ) : bookings.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <CalendarIcon className="w-12 h-12 text-muted-foreground" />
+          <div className="text-center py-24 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px]">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-[28px] flex items-center justify-center mx-auto mb-6">
+              <CalendarIcon className="w-10 h-10 text-slate-300 dark:text-white/20" />
             </div>
-            <h2 className="text-xl font-semibold mb-2 dark:text-white">Bronlar yo'q</h2>
-            <p className="text-muted-foreground mb-6">Hozircha hech qanday bron mavjud emas</p>
+            <h2 className="text-xl font-black uppercase tracking-tight mb-2 dark:text-white">
+              Bronlar yo'q
+            </h2>
+            <p className="text-slate-400 dark:text-white/30 font-bold mb-8 text-sm">
+              Hozircha hech qanday bron mavjud emas
+            </p>
             <Link href="/">
-              <Button>Maydonlarni ko'rish</Button>
+              <Button className="rounded-2xl px-8 font-black uppercase tracking-widest h-12">
+                Maydonlarni ko'rish
+              </Button>
             </Link>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-12">
+            {/* Upcoming */}
             {upcomingBookings.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4 dark:text-white flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                  Kelgusi bronlar
-                  <span className="ml-1 text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <CalendarIcon className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/30">
+                    Kelgusi bronlar
+                  </h2>
+                  <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full">
                     {upcomingBookings.length}
                   </span>
-                </h2>
-                <div className="grid gap-4">
+                </div>
+                <div className="space-y-4">
                   {upcomingBookings.map((booking) => (
-                    <Card key={booking.id} className="dark:bg-slate-800 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-0">
-                        <div className="flex flex-col md:flex-row">
-                          <div className="w-full md:w-24 h-24 md:h-auto bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-4xl flex-shrink-0">
-                            {fieldIcons[booking.field?.field_type || "football"] || "🏟️"}
-                          </div>
-                          <div className="flex-1 p-4">
-                            <div className="flex items-start justify-between gap-2 mb-3">
-                              <h3 className="font-semibold dark:text-white">
-                                {booking.field?.name || `Maydon #${booking.field_id}`}
-                              </h3>
-                              <Badge className="bg-emerald-500 text-white flex-shrink-0">
-                                <CheckCircleIcon className="w-3 h-3 mr-1" />
-                                Tasdiqlangan
-                              </Badge>
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mb-4">
-                              <div className="flex items-center gap-1">
-                                <CalendarIcon className="w-4 h-4 flex-shrink-0" />
-                                {formatDate(booking.date)}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <ClockIcon className="w-4 h-4 flex-shrink-0" />
-                                {booking.start_time} – {booking.end_time}
-                              </div>
-                              {booking.field?.city && (
-                                <div className="flex items-center gap-1">
-                                  <MapPinIcon className="w-4 h-4 flex-shrink-0" />
-                                  {booking.field.city}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Link href={`/fields/${booking.field_id}`} className="flex-1">
-                                <Button variant="outline" size="sm" className="w-full">Batafsil</Button>
-                              </Link>
-                              <Button
-                                variant="outline" size="sm"
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-900/30"
-                                onClick={() => handleCancelBooking(booking.id)}
-                                disabled={cancellingId === booking.id}
-                              >
-                                {cancellingId === booking.id ? (
-                                  <span className="flex items-center gap-1">
-                                    <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                                    Bekor qilinmoqda...
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1">
-                                    <XMarkIcon className="w-4 h-4" />
-                                    Bekor qilish
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onCancel={handleCancelBooking}
+                      cancellingId={cancellingId}
+                      upcoming
+                    />
                   ))}
                 </div>
               </section>
             )}
 
+            {/* History */}
             {pastBookings.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold mb-4 dark:text-white/60 flex items-center gap-2">
-                  <ClockIcon className="w-5 h-5 text-muted-foreground" />
-                  O'tgan bronlar
-                  <span className="ml-1 text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
+                    <ClockIcon className="w-4 h-4 text-slate-400 dark:text-white/30" />
+                  </div>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/30">
+                    Bron qilish tarixi
+                  </h2>
+                  <span className="text-[10px] font-black bg-slate-100 dark:bg-white/5 text-slate-400 px-3 py-1 rounded-full">
                     {pastBookings.length}
                   </span>
-                </h2>
-                <div className="grid gap-4">
+                </div>
+                <div className="space-y-4">
                   {pastBookings.map((booking) => (
-                    <Card key={booking.id} className="dark:bg-slate-800 dark:border-slate-700 opacity-70">
-                      <CardContent className="p-0">
-                        <div className="flex flex-col md:flex-row">
-                          <div className="w-full md:w-24 h-24 md:h-auto bg-slate-400 dark:bg-slate-600 flex items-center justify-center text-4xl flex-shrink-0">
-                            {fieldIcons[booking.field?.field_type || "football"] || "🏟️"}
-                          </div>
-                          <div className="flex-1 p-4">
-                            <div className="flex items-start justify-between gap-2 mb-3">
-                              <h3 className="font-semibold dark:text-white">
-                                {booking.field?.name || `Maydon #${booking.field_id}`}
-                              </h3>
-                              <Badge variant="secondary">Yakunlangan</Badge>
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <CalendarIcon className="w-4 h-4" />
-                                {formatDate(booking.date)}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <ClockIcon className="w-4 h-4" />
-                                {booking.start_time} – {booking.end_time}
-                              </div>
-                              {booking.field?.city && (
-                                <div className="flex items-center gap-1">
-                                  <MapPinIcon className="w-4 h-4" />
-                                  {booking.field.city}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onCancel={handleCancelBooking}
+                      cancellingId={cancellingId}
+                      upcoming={false}
+                    />
                   ))}
                 </div>
               </section>
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function BookingCard({
+  booking,
+  onCancel,
+  cancellingId,
+  upcoming,
+}: {
+  booking: BookingWithField;
+  onCancel: (id: number) => void;
+  cancellingId: number | null;
+  upcoming: boolean;
+}) {
+  const field = booking.field;
+  const color = fieldColors[field?.field_type || "football"];
+
+  return (
+    <div
+      className={cn(
+        "bg-white dark:bg-white/[0.03] border rounded-[32px] overflow-hidden shadow-sm transition-all",
+        upcoming
+          ? "border-slate-200 dark:border-white/8 hover:border-primary/30 dark:hover:border-primary/20"
+          : "border-slate-100 dark:border-white/5 opacity-70"
+      )}
+    >
+      <div className="flex flex-col sm:flex-row">
+        {/* Left color bar */}
+        <div
+          className={cn(
+            "sm:w-20 h-20 sm:h-auto flex items-center justify-center text-4xl shrink-0 bg-gradient-to-br",
+            upcoming ? color : "from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-800"
+          )}
+        >
+          {fieldIcons[field?.field_type || "football"] || "🏟️"}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-6">
+          <div className="flex items-start justify-between gap-2 mb-4">
+            <div>
+              <h3 className="font-black text-lg dark:text-white leading-tight">
+                {field?.name || `Maydon #${booking.field_id}`}
+              </h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mt-0.5">
+                {field?.field_type}
+              </p>
+            </div>
+            {upcoming ? (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0">
+                <CheckCircleIcon className="w-3.5 h-3.5" />
+                Tasdiqlangan
+              </span>
+            ) : (
+              <span className="px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0">
+                Yakunlangan
+              </span>
+            )}
+          </div>
+
+          {/* Details grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
+              <CalendarIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
+              <span className="font-bold">{formatDate(booking.date)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
+              <ClockIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
+              <span className="font-bold">{booking.start_time} – {booking.end_time}</span>
+            </div>
+            {field?.address && (
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
+                <MapPinIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
+                <span className="font-bold">{field.city}, {field.address}</span>
+              </div>
+            )}
+            {field?.phone_number && (
+              <a
+                href={`tel:${field.phone_number}`}
+                className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition-colors"
+              >
+                <PhoneIcon className="w-4 h-4 shrink-0" />
+                <span className="font-black">{field.phone_number}</span>
+              </a>
+            )}
+          </div>
+
+          {/* Actions */}
+          {upcoming && (
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
+              <Link href={`/fields/${booking.field_id}`} className="flex-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-xl font-black uppercase tracking-wider text-[10px] h-9"
+                >
+                  Batafsil
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-black uppercase tracking-wider text-[10px] h-9 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-100 dark:border-red-900/20"
+                onClick={() => onCancel(booking.id)}
+                disabled={cancellingId === booking.id}
+              >
+                {cancellingId === booking.id ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                    Bekor qilinmoqda
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <XMarkIcon className="w-3.5 h-3.5" />
+                    Bekor qilish
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

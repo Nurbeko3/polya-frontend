@@ -59,6 +59,15 @@
   .text-balance {
     text-wrap: balance;
   }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Mobile bottom tab bar spacing */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 88px;
+    }
+  }
 }
 
 /* Custom scrollbar */

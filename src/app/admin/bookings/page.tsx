@@ -14,7 +14,9 @@ import {
   CloseCircleOutlined,
   ReloadOutlined,
   EnvironmentOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
+import { Modal, message } from "antd";
 import { api } from "@/lib/api";
 
 const { Title, Text } = Typography;
@@ -51,12 +53,35 @@ const paymentConfig: Record<string, { label: string; color: string; bg: string }
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  const handleClearOld = () => {
+    Modal.confirm({
+      title: "O'tgan bronlarni tozalash",
+      content: "Bugundan oldingi barcha tasdiqlangan bronlar o'chiriladi. Davom etasizmi?",
+      okText: "Ha, tozalash",
+      cancelText: "Bekor qilish",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setIsClearing(true);
+        try {
+          const res = await api.delete<{ deleted_count: number; message: string }>("/admin/bookings/clear-old");
+          message.success(res.message || `${res.deleted_count} ta bron o'chirildi`);
+          await fetchBookings();
+        } catch (error) {
+          message.error("Tozalashda xatolik yuz berdi");
+        } finally {
+          setIsClearing(false);
+        }
+      },
+    });
+  };
 
   const fetchBookings = async () => {
     setIsLoading(true);
@@ -90,6 +115,7 @@ export default function AdminBookingsPage() {
     locked: bookings.filter((b) => b.status === "locked").length,
   };
 
+  const busy = isLoading || isClearing;
   const filterButtons = [
     { key: "all", label: `Barchasi`, count: counts.all, color: "#6366f1", bg: "#f5f3ff" },
     { key: "booked", label: "Tasdiqlangan", count: counts.booked, color: "#059669", bg: "#f0fdf4" },
@@ -224,45 +250,60 @@ export default function AdminBookingsPage() {
             Barcha mavjud bronlar va to'lov holati
           </div>
         </div>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={fetchBookings}
-          loading={isLoading}
-          style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
-        >
-          Yangilash
-        </Button>
+        <Space>
+          <Button
+            icon={<DeleteOutlined />}
+            onClick={handleClearOld}
+            loading={isClearing}
+            style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5", borderRadius: 10, height: 40 }}
+          >
+            Tozalash
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchBookings}
+            loading={isLoading}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+          >
+            Yangilash
+          </Button>
+        </Space>
       </div>
 
       {/* Stats Row */}
-      <Row gutter={[12, 12]}>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#0f172a" }}>{isLoading ? "—" : bookings.length}</div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Jami bronlar</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#059669" }}>{isLoading ? "—" : counts.booked}</div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Tasdiqlangan</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#d97706" }}>{isLoading ? "—" : counts.locked}</div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Vaqtincha</div>
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "#3b82f6" }}>
-              {isLoading ? "—" : `${(totalRevenue / 1000).toFixed(0)}K`}
-            </div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>UZS Daromad</div>
-          </Card>
-        </Col>
-      </Row>
+      {(() => {
+        const busy = isLoading || isClearing;
+        return (
+          <Row gutter={[12, 12]}>
+            <Col xs={12} sm={6}>
+              <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#0f172a" }}>{busy ? "—" : bookings.length}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Jami bronlar</div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#059669" }}>{busy ? "—" : counts.booked}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Tasdiqlangan</div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#d97706" }}>{busy ? "—" : counts.locked}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Vaqtincha</div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#3b82f6" }}>
+                  {busy ? "—" : `${(totalRevenue / 1000).toFixed(0)}K`}
+                </div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>UZS Daromad</div>
+              </Card>
+            </Col>
+          </Row>
+        );
+      })()}
 
       {/* Search & Filter */}
       <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0" }} styles={{ body: { padding: "16px 20px" } }}>
@@ -304,7 +345,7 @@ export default function AdminBookingsPage() {
                     fontSize: 11, fontWeight: 700,
                     padding: "0 6px", borderRadius: 10,
                   }}>
-                    {btn.count}
+                    {busy ? "…" : btn.count}
                   </span>
                 </button>
               ))}
