@@ -140,6 +140,9 @@
 .ant-table-tbody > tr:hover > td {
   background: #f8fafc !important;
 }
+.dark .ant-table-tbody > tr:hover > td {
+  background: #1e293b !important;
+}
 
 /* ── Ant Design button smoothness ── */
 .ant-btn {
@@ -157,6 +160,86 @@
 /* ── Admin sidebar nav item hover ── */
 .admin-nav-item {
   transition: background 0.15s, color 0.15s, border-color 0.15s !important;
+}
+
+/* ── Ant Design dark mode overrides ── */
+.dark .ant-table {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+.dark .ant-table-thead > tr > th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+.dark .ant-table-tbody > tr > td {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: #1e293b !important;
+}
+.dark .ant-table-wrapper .ant-table-container {
+  border-color: #334155 !important;
+}
+.dark .ant-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark .ant-card .ant-card-head {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+.dark .ant-statistic-title {
+  color: #94a3b8 !important;
+}
+.dark .ant-statistic-content {
+  color: #f1f5f9 !important;
+}
+.dark .ant-select-selector {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark .ant-select-arrow {
+  color: #94a3b8 !important;
+}
+.dark .ant-dropdown-menu {
+  background: #1e293b !important;
+}
+.dark .ant-dropdown-menu-item {
+  color: #e2e8f0 !important;
+}
+.dark .ant-dropdown-menu-item:hover {
+  background: #334155 !important;
+}
+.dark .ant-pagination-item {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+.dark .ant-pagination-item a {
+  color: #e2e8f0 !important;
+}
+.dark .ant-pagination-item-active {
+  border-color: #3b82f6 !important;
+  background: #1d4ed8 !important;
+}
+.dark .ant-pagination-prev button,
+.dark .ant-pagination-next button {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+.dark .ant-tag {
+  border-color: #334155 !important;
+}
+.dark .ant-input {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.dark .ant-input::placeholder {
+  color: #64748b !important;
 }
 
 /* ── Skeleton shimmer ── */

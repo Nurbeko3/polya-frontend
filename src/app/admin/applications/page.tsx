@@ -237,7 +237,7 @@ export default function AdminApplicationsPage() {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",

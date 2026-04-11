@@ -51,7 +51,7 @@ export function PaymentDialog({
             onClick={() => onSelectMethod("click")}
             disabled={isLoading}
           >
-            <div className="w-12 h-10 bg-white rounded-lg flex items-center justify-center mr-4 border group-hover:scale-105 transition-transform overflow-hidden px-1">
+            <div className="w-12 h-10 bg-white dark:bg-slate-200 rounded-lg flex items-center justify-center mr-4 border group-hover:scale-105 transition-transform overflow-hidden px-1">
               <img src="/assets/images/click.jpg" alt="Click" className="w-full h-auto object-contain" />
             </div>
             <div className="flex flex-col items-start">
@@ -69,7 +69,7 @@ export function PaymentDialog({
             onClick={() => onSelectMethod("payme")}
             disabled={isLoading}
           >
-            <div className="w-12 h-10 bg-white rounded-lg flex items-center justify-center mr-4 border group-hover:scale-105 transition-transform overflow-hidden px-1">
+            <div className="w-12 h-10 bg-white dark:bg-slate-200 rounded-lg flex items-center justify-center mr-4 border group-hover:scale-105 transition-transform overflow-hidden px-1">
               <img src="/assets/images/payme.jpg" alt="Payme" className="w-full h-auto object-contain" />
             </div>
             <div className="flex flex-col items-start">

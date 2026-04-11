@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Select, Space, Row, Col } from "antd";
+import { Button, Input, Select, Row, Col } from "antd";
 import { SearchOutlined, ClearOutlined } from "@ant-design/icons";
 import { FieldType } from "@/types";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -44,10 +44,10 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
   };
 
   return (
-    <div className="mb-10">
-      <div className="p-6 rounded-lg" style={{ backgroundColor: bgColor, border: `1px solid ${borderColor}` }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8}>
+    <div className="mb-8 md:mb-10">
+      <div className="p-4 md:p-6 rounded-lg" style={{ backgroundColor: bgColor, border: `1px solid ${borderColor}` }}>
+        <Row gutter={[12, 12]} align="middle">
+          <Col xs={24} md={7}>
             <Input
               placeholder="Shahar yoki tuman..."
               prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
@@ -58,7 +58,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
               style={{ backgroundColor: isDark ? "#0a0a0a" : "#ffffff", borderColor }}
             />
           </Col>
-          <Col xs={24} md={6}>
+          <Col xs={24} sm={12} md={6}>
             <Select
               placeholder="Sport turi"
               size="large"
@@ -82,7 +82,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
               <Select.Option value="volleyball">🏐 Voleybol</Select.Option>
             </Select>
           </Col>
-          <Col xs={12} md={4}>
+          <Col xs={12} sm={6} md={3}>
             <Input
               type="number"
               placeholder="Narx dan"
@@ -92,7 +92,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
               style={{ backgroundColor: isDark ? "#0a0a0a" : "#ffffff", borderColor }}
             />
           </Col>
-          <Col xs={12} md={4}>
+          <Col xs={12} sm={6} md={3}>
             <Input
               type="number"
               placeholder="Narx gacha"
@@ -102,26 +102,27 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
               style={{ backgroundColor: isDark ? "#0a0a0a" : "#ffffff", borderColor }}
             />
           </Col>
-          <Col xs={24} md={2}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Button 
-                type="primary" 
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-                loading={isLoading}
-                block
-                size="large"
-              >
-                Qidirish
-              </Button>
-              <Button 
-                icon={<ClearOutlined />}
-                onClick={handleClear}
-                block
-              >
-                Tozalash
-              </Button>
-            </Space>
+          <Col xs={12} md={3}>
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={handleSearch}
+              loading={isLoading}
+              size="large"
+              block
+            >
+              Qidirish
+            </Button>
+          </Col>
+          <Col xs={12} md={2}>
+            <Button
+              icon={<ClearOutlined />}
+              onClick={handleClear}
+              size="large"
+              block
+            >
+              Tozalash
+            </Button>
           </Col>
         </Row>
       </div>

@@ -8,6 +8,7 @@ interface User {
   phone: string;
   email?: string;
   is_admin: boolean;
+  is_super_admin?: boolean;
 }
 
 interface AuthState {

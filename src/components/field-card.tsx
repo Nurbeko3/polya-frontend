@@ -41,7 +41,7 @@ export function FieldCard({ field }: FieldCardProps) {
         className="h-full"
         style={{ backgroundColor: cardBg, borderColor }}
         cover={
-          <div className="relative h-48 overflow-hidden" style={{ background: isDark ? "linear-gradient(to bottom right, #262626, #171717)" : "linear-gradient(to bottom right, #e5e7eb, #f3f4f6)" }}>
+          <div className="relative h-44 md:h-48 overflow-hidden" style={{ background: isDark ? "linear-gradient(to bottom right, #262626, #171717)" : "linear-gradient(to bottom right, #e5e7eb, #f3f4f6)" }}>
             {field.image_url ? (
               <img
                 src={field.image_url}
@@ -66,18 +66,18 @@ export function FieldCard({ field }: FieldCardProps) {
           </div>
         }
       >
-        <Title level={5} className="!mb-1 !text-lg truncate" style={{ color: isDark ? "#fff" : "#111827" }}>{field.name}</Title>
-        <Text type="secondary" className="block mb-3 truncate">{field.address}</Text>
+        <Title level={5} className="!mb-1 !text-base truncate" style={{ color: isDark ? "#fff" : "#111827" }}>{field.name}</Title>
+        <Text type="secondary" className="block mb-2 truncate text-sm">{field.address}</Text>
         <Row justify="space-between" align="middle">
           <Col>
-            <span className="text-2xl font-bold" style={{ color: "#2563eb" }}>
+            <span className="text-xl font-bold" style={{ color: "#2563eb" }}>
               {formatPrice(field.price_per_hour)}
             </span>
-            <Text type="secondary">/soat</Text>
+            <Text type="secondary" className="text-xs">/soat</Text>
           </Col>
           {field.rating > 0 && (
             <Col>
-              <Rate disabled value={field.rating} className="!text-sm" />
+              <Rate disabled value={field.rating} className="!text-xs" />
             </Col>
           )}
         </Row>

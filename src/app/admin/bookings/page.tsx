@@ -63,8 +63,8 @@ export default function AdminBookingsPage() {
 
   const handleClearOld = () => {
     Modal.confirm({
-      title: "O'tgan bronlarni tozalash",
-      content: "Bugundan oldingi barcha tasdiqlangan bronlar o'chiriladi. Davom etasizmi?",
+      title: "Barcha bronlarni tozalash",
+      content: "Barcha bronlar va vaqtincha band slotlar o'chiriladi. Davom etasizmi?",
       okText: "Ha, tozalash",
       cancelText: "Bekor qilish",
       okButtonProps: { danger: true },
@@ -236,7 +236,7 @@ export default function AdminBookingsPage() {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #6366f1, #4f46e5)",

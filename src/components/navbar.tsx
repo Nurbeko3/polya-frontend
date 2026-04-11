@@ -188,40 +188,46 @@ function UserDropdown({ onClose }: { onClose: () => void }) {
   return (
     <div
       className={cn(
-        "absolute right-0 top-full mt-3 w-52 rounded-[24px] border backdrop-blur-3xl overflow-hidden",
-        g.bg, g.border, g.shadow
+        "absolute right-0 top-full mt-3 w-56 rounded-[20px] overflow-hidden z-50",
+        "border shadow-xl",
+        isDark
+          ? "bg-[#1c1c2e] border-white/10 shadow-black/50 text-white"
+          : "bg-white border-slate-200 shadow-slate-200/80 text-slate-900"
       )}
     >
       {/* User info */}
-      <div className={cn("px-4 py-3 border-b", isDark ? "border-white/8" : "border-black/6")}>
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Akkaunt</p>
-        <p className="font-black text-sm mt-0.5 truncate">{user?.name}</p>
-        <p className="text-[10px] opacity-40 font-medium truncate">{user?.phone}</p>
+      <div className={cn(
+        "px-4 py-3 border-b",
+        isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-100 bg-slate-50"
+      )}>
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-0.5">Akkaunt</p>
+        <p className="font-bold text-sm truncate">{user?.name}</p>
+        <p className="text-[11px] opacity-40 truncate">{user?.phone}</p>
       </div>
 
       {/* Links */}
-      <div className="py-1.5">
+      <div className="py-1">
         {items.map(({ label, icon: Icon, href }) => (
           <Link
             key={href}
             href={href}
             onClick={onClose}
             className={cn(
-              "flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-colors",
-              isDark ? "hover:bg-white/8" : "hover:bg-black/5"
+              "flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold transition-colors",
+              isDark ? "hover:bg-white/8" : "hover:bg-slate-50"
             )}
           >
-            <Icon className="w-4 h-4 opacity-50" />
+            <Icon className={cn("w-4 h-4", isDark ? "opacity-50" : "text-slate-400")} />
             {label}
           </Link>
         ))}
       </div>
 
       {/* Logout */}
-      <div className={cn("border-t py-1.5", isDark ? "border-white/8" : "border-black/6")}>
+      <div className={cn("border-t py-1", isDark ? "border-white/8" : "border-slate-100")}>
         <button
           onClick={() => { logout(); router.push("/"); onClose(); }}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 w-full hover:bg-red-500/10 transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-red-500 w-full hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
         >
           <ArrowRightOnRectangleIcon className="w-4 h-4" />
           Chiqish

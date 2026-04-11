@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { api } from "@/lib/api";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Space, Button, Spin } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -47,6 +48,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [pendingApps, setPendingApps] = useState(0);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const isAuthPage = pathname === "/admin/login" || pathname === "/admin/signup";
 
@@ -103,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       key: "profile-info",
       label: (
         <div style={{ padding: "4px 0" }}>
-          <div style={{ fontWeight: 600, color: "#141414" }}>{user?.name}</div>
+          <div style={{ fontWeight: 600 }}>{user?.name}</div>
           <div style={{ fontSize: 12, color: "#8c8c8c" }}>{user?.phone}</div>
         </div>
       ),
@@ -184,20 +187,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             return (
               <Link key={item.key} href={item.key} style={{ textDecoration: "none" }}>
                 <div style={{
+                  position: "relative",
                   display: "flex",
                   alignItems: "center",
                   gap: collapsed ? 0 : 10,
                   justifyContent: collapsed ? "center" : "flex-start",
-                  padding: collapsed ? "10px" : "10px 14px",
+                  padding: collapsed ? "11px" : "10px 14px",
                   borderRadius: 10,
                   marginBottom: 4,
                   background: isSelected
-                    ? "linear-gradient(135deg, rgba(99,102,241,0.3), rgba(129,140,248,0.15))"
+                    ? "linear-gradient(135deg, rgba(99,102,241,0.35), rgba(129,140,248,0.2))"
                     : "transparent",
-                  border: isSelected ? "1px solid rgba(99,102,241,0.4)" : "1px solid transparent",
+                  border: isSelected ? "1px solid rgba(99,102,241,0.5)" : "1px solid transparent",
                   cursor: "pointer",
                   transition: "all 0.2s",
-                  color: isSelected ? "#818cf8" : "rgba(255,255,255,0.6)",
+                  color: isSelected ? "#a5b4fc" : "rgba(255,255,255,0.65)",
                 }}>
                   <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, color: isSelected ? "#818cf8" : "rgba(255,255,255,0.5)" }}>
                     {item.icon}
@@ -224,12 +228,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {collapsed && showBadge && (
                     <span style={{
                       position: "absolute",
-                      top: 6,
-                      right: 6,
+                      top: 4,
+                      right: 4,
                       width: 8,
                       height: 8,
                       borderRadius: "50%",
                       background: "#ef4444",
+                      display: "block",
                     }} />
                   )}
                 </div>
@@ -269,31 +274,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Layout style={{ marginLeft: collapsed ? 72 : 240, transition: "margin-left 0.2s" }}>
         {/* Header */}
         <Header style={{
-          background: "#fff",
+          background: isDark ? "#0f172a" : "#fff",
           padding: "0 24px",
-          borderBottom: "1px solid #f0f0f0",
+          borderBottom: isDark ? "1px solid #1e293b" : "1px solid #f0f0f0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           height: 64,
+          lineHeight: "normal",
           position: "sticky",
           top: 0,
           zIndex: 40,
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+          boxShadow: isDark ? "0 1px 8px rgba(0,0,0,0.3)" : "0 1px 8px rgba(0,0,0,0.06)",
+          overflow: "visible",
         }}>
           <Space size="middle">
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: 16, color: "#64748b" }}
+              style={{ fontSize: 16, color: isDark ? "#94a3b8" : "#64748b" }}
             />
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: isDark ? "#f1f5f9" : "#0f172a", lineHeight: 1.3 }}>
                 {pageTitles[selectedKey] || "Admin Panel"}
               </div>
               <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                Polya Admin · {new Date().toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" })}
+                Polya Admin · {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
               </div>
             </div>
           </Space>
@@ -303,7 +310,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Button
                 type="text"
                 icon={<BellOutlined />}
-                style={{ color: "#64748b", fontSize: 18 }}
+                style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 18 }}
                 onClick={() => router.push("/admin/applications")}
               />
             </Badge>
@@ -312,25 +319,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 10,
                 cursor: "pointer",
-                padding: "4px 8px",
-                borderRadius: 10,
-                border: "1px solid #f1f5f9",
-                background: "#f8fafc",
-                maxWidth: 180,
+                padding: "6px 12px 6px 6px",
+                borderRadius: 12,
+                border: isDark ? "1px solid #334155" : "1px solid #e2e8f0",
+                background: isDark ? "#1e293b" : "#f8fafc",
+                transition: "all 0.15s",
               }}>
                 <Avatar
-                  size={32}
-                  style={{ background: "linear-gradient(135deg, #6366f1, #818cf8)", fontWeight: 700, fontSize: 13, flexShrink: 0 }}
+                  size={34}
+                  style={{ background: "linear-gradient(135deg, #6366f1, #818cf8)", fontWeight: 700, fontSize: 14, flexShrink: 0 }}
                 >
                   {user?.name?.charAt(0).toUpperCase()}
                 </Avatar>
-                <div style={{ overflow: "hidden", minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ lineHeight: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? "#f1f5f9" : "#0f172a", whiteSpace: "nowrap" }}>
                     {user?.name}
                   </div>
-                  <div style={{ fontSize: 10, color: "#6366f1", fontWeight: 600 }}>ADMIN</div>
+                  <div style={{ fontSize: 10, color: "#6366f1", fontWeight: 700, marginTop: 2, letterSpacing: "0.05em" }}>
+                    {user?.is_super_admin ? "SUPER ADMIN" : "ADMIN"}
+                  </div>
                 </div>
               </div>
             </Dropdown>
@@ -338,7 +347,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Header>
 
         {/* Content */}
-        <Content style={{ padding: 24, background: "#f1f5f9", minHeight: "calc(100vh - 64px)" }}>
+        <Content style={{ padding: 24, background: isDark ? "#0c1220" : "#f1f5f9", minHeight: "calc(100vh - 64px)" }}>
           {children}
         </Content>
       </Layout>

@@ -9,6 +9,7 @@ import type { ColumnsType } from "antd/es/table";
 import {
   SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
   EyeOutlined, EyeInvisibleOutlined, UploadOutlined, ReloadOutlined, EnvironmentOutlined,
+  SendOutlined, CopyOutlined,
 } from "@ant-design/icons";
 import { API_URL, api } from "@/lib/api";
 
@@ -23,6 +24,7 @@ interface Field {
   is_active: boolean;
   phone_number?: string;
   description?: string | null;
+  owner_telegram_chat_id?: string | null;
 }
 
 const { Title, Text } = Typography;
@@ -82,6 +84,39 @@ export default function AdminFieldsPage() {
     }
   };
 
+  const handleOwnerLink = async (fieldId: number, fieldName: string) => {
+    try {
+      const res = await api.get<{ deep_link: string; field_name: string }>(
+        `/admin/fields/${fieldId}/owner-link`
+      );
+      Modal.info({
+        title: `"${fieldName}" uchun Telegram link`,
+        content: (
+          <div>
+            <p style={{ marginBottom: 8, color: "#64748b", fontSize: 13 }}>
+              Ushbu linkni maydon egasiga yuboring. Ega linkni bosib botni ochadi va avtomatik ro'yxatdan o'tadi.
+            </p>
+            <div style={{
+              background: "#f1f5f9", borderRadius: 8, padding: "10px 12px",
+              fontFamily: "monospace", fontSize: 12, wordBreak: "break-all",
+              border: "1px solid #e2e8f0",
+            }}>
+              {res.deep_link}
+            </div>
+          </div>
+        ),
+        okText: "Nusxa olish",
+        onOk: () => {
+          navigator.clipboard.writeText(res.deep_link);
+          message.success("Link nusxalandi!");
+        },
+        width: 480,
+      });
+    } catch {
+      message.error("Link yaratishda xatolik");
+    }
+  };
+
   const handleEdit = (field: Field) => {
     setEditingField(field);
     setImagePreview(field.image_url || null);
@@ -94,6 +129,7 @@ export default function AdminFieldsPage() {
       price_per_hour: field.price_per_hour,
       phone_number: field.phone_number,
       description: field.description,
+      owner_telegram_chat_id: field.owner_telegram_chat_id || "",
     });
     setIsModalOpen(true);
   };
@@ -131,15 +167,48 @@ export default function AdminFieldsPage() {
       const payload = { ...values, image_url: imageUrl };
 
       if (editingField) {
-        await api.put(`/fields/${editingField.id}`, payload);
+        await api.put(`/admin/fields/${editingField.id}`, payload);
         setFields(fields.map((f) => f.id === editingField.id ? { ...f, ...payload } : f));
         message.success("Maydon muvaffaqiyatli yangilandi");
+        handleModalClose();
       } else {
-        const newField = await api.post<Field>("/fields/", payload);
+        const newField = await api.post<Field & { owner_telegram_link?: string }>("/fields/", payload);
         setFields([...fields, newField]);
-        message.success("Maydon muvaffaqiyatli yaratildi");
+        handleModalClose();
+        // Telegram link modal
+        if (newField.owner_telegram_link) {
+          Modal.success({
+            title: "✅ Maydon yaratildi!",
+            width: 500,
+            content: (
+              <div>
+                <p style={{ color: "#64748b", marginBottom: 12 }}>
+                  Maydon egasiga quyidagi Telegram linkni yuboring. Ega linkni bosib botda ro'yxatdan o'tadi va bron xabarlarini oladi.
+                </p>
+                <div style={{
+                  background: "#f0f9ff",
+                  border: "1px solid #bae6fd",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontFamily: "monospace",
+                  fontSize: 12,
+                  wordBreak: "break-all",
+                  color: "#0369a1",
+                }}>
+                  {newField.owner_telegram_link}
+                </div>
+              </div>
+            ),
+            okText: "📋 Nusxa olish",
+            onOk: () => {
+              navigator.clipboard.writeText(newField.owner_telegram_link!);
+              message.success("Link nusxalandi!");
+            },
+          });
+        } else {
+          message.success("Maydon muvaffaqiyatli yaratildi");
+        }
       }
-      handleModalClose();
     } catch (error: any) {
       message.error(error.message || "Xatolik yuz berdi");
     } finally {
@@ -181,7 +250,14 @@ export default function AdminFieldsPage() {
               {cfg?.emoji || "🏟️"}
             </Avatar>
             <div>
-              <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 14 }}>{record.name}</div>
+              <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                {record.name}
+                {record.owner_telegram_chat_id && (
+                  <Tooltip title={`Telegram ID: ${record.owner_telegram_chat_id}`}>
+                    <span style={{ fontSize: 13, cursor: "default" }}>✈️</span>
+                  </Tooltip>
+                )}
+              </div>
               <span style={{
                 display: "inline-block", marginTop: 2,
                 background: cfg?.bg || "#f1f5f9", color: cfg?.color || "#64748b",
@@ -256,6 +332,14 @@ export default function AdminFieldsPage() {
               }}
             />
           </Tooltip>
+          <Tooltip title="Egaga Telegram link">
+            <Button
+              type="text" size="small"
+              icon={<SendOutlined />}
+              onClick={() => handleOwnerLink(record.id, record.name)}
+              style={{ color: "#0ea5e9", background: "#f0f9ff", borderRadius: 8, width: 32, height: 32 }}
+            />
+          </Tooltip>
           <Tooltip title="Tahrirlash">
             <Button
               type="text" size="small"
@@ -286,7 +370,7 @@ export default function AdminFieldsPage() {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #10b981, #059669)",
@@ -482,6 +566,25 @@ export default function AdminFieldsPage() {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            name="owner_telegram_chat_id"
+            label={
+              <span>
+                Maydon egasining Telegram ID{" "}
+                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}>
+                  (ixtiyoriy — bron xabarlari uchun)
+                </span>
+              </span>
+            }
+          >
+            <Input
+              size="large"
+              placeholder="123456789"
+              prefix={<span style={{ fontSize: 16 }}>✈️</span>}
+              style={{ borderRadius: 10 }}
+            />
+          </Form.Item>
 
           <Form.Item name="description" label="Tavsif (ixtiyoriy)">
             <Input.TextArea rows={3} placeholder="Maydon haqida qo'shimcha ma'lumot..." style={{ borderRadius: 10 }} />

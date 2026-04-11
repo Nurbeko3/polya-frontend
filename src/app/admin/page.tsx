@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Row, Col, Skeleton, Typography, Space, Tag, Button, Progress, Empty, Avatar } from "antd";
+import { Card, Row, Col, Skeleton, Typography, Space, Tag, Button, Progress, Empty, Avatar, Modal, message } from "antd";
 import {
   EnvironmentOutlined,
   FileTextOutlined,
@@ -14,6 +14,7 @@ import {
   FallOutlined,
   DollarOutlined,
   TeamOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -137,6 +138,7 @@ export default function AdminDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -157,6 +159,28 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClearStats = () => {
+    Modal.confirm({
+      title: "Statistikani tozalash",
+      content: "Barcha bronlar o'chiriladi va statistika nolga tushadi. Davom etasizmi?",
+      okText: "Ha, tozalash",
+      cancelText: "Bekor qilish",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setIsClearing(true);
+        try {
+          const res = await api.delete<{ deleted_count: number; message: string }>("/admin/bookings/clear-old");
+          message.success(res.message || `${res.deleted_count} ta bron o'chirildi`);
+          await fetchData();
+        } catch {
+          message.error("Tozalashda xatolik yuz berdi");
+        } finally {
+          setIsClearing(false);
+        }
+      },
+    });
   };
 
   const revenueGrowth = stats && stats.prev_month_revenue > 0
@@ -205,7 +229,7 @@ export default function AdminDashboard() {
   const greeting = hour < 12 ? "Xayrli tong" : hour < 17 ? "Xayrli kun" : "Xayrli kech";
 
   return (
-    <Space direction="vertical" size={20} style={{ width: "100%", display: "flex" }}>
+    <Space orientation="vertical" size={20} style={{ width: "100%", display: "flex" }}>
       {/* Welcome Banner */}
       <div style={{
         background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
@@ -355,7 +379,7 @@ export default function AdminDashboard() {
 
         {/* Quick Stats & Links */}
         <Col xs={24} lg={10}>
-          <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
             {/* Revenue breakdown */}
             <Card
               style={{ borderRadius: 16, border: "1px solid #e2e8f0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
@@ -373,8 +397,20 @@ export default function AdminDashboard() {
                   <span style={{ fontWeight: 700, color: "#0f172a" }}>Daromad Statistikasi</span>
                 </Space>
               }
+              extra={
+                <Button
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={isClearing}
+                  onClick={handleClearStats}
+                  style={{ borderRadius: 8, fontSize: 12 }}
+                >
+                  Tozalash
+                </Button>
+              }
             >
-              <Space direction="vertical" style={{ width: "100%" }} size={16}>
+              <Space orientation="vertical" style={{ width: "100%" }} size={16}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <Text style={{ fontSize: 13, color: "#64748b" }}>Bu oylik daromad</Text>
@@ -421,7 +457,7 @@ export default function AdminDashboard() {
               styles={{ body: { padding: 16 } }}
               title={<span style={{ fontWeight: 700, color: "#0f172a" }}>Tezkor havolalar</span>}
             >
-              <Space direction="vertical" style={{ width: "100%" }} size={8}>
+              <Space orientation="vertical" style={{ width: "100%" }} size={8}>
                 {[
                   { href: "/admin/fields", label: "Maydonlar boshqaruvi", icon: <EnvironmentOutlined />, color: "#10b981", bg: "#f0fdf4" },
                   { href: "/admin/bookings", label: "Bronlar registri", icon: <CalendarOutlined />, color: "#6366f1", bg: "#f5f3ff" },
