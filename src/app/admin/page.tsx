@@ -225,8 +225,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Xayrli tong" : hour < 17 ? "Xayrli kun" : "Xayrli kech";
+  const greeting = "Xayrli kun";
 
   return (
     <Space orientation="vertical" size={20} style={{ width: "100%", display: "flex" }}>

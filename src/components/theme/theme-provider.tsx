@@ -33,17 +33,20 @@ export function ThemeProvider({
   defaultTheme?: Theme;
   storageKey?: string;
 }) {
-  const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  // Lazy initializer: clientda darhol localStorage'dan o'qiydi → hydration flash yo'q
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === "undefined") return defaultTheme;
+    return getInitialTheme(storageKey);
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const initial = getInitialTheme(storageKey);
-    setThemeState(initial);
-    
+    // HTML class ni bir marta sinxronlaymiz
     document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(initial);
-  }, [storageKey]);
+    document.documentElement.classList.add(theme);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);

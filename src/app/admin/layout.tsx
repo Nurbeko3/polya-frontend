@@ -300,7 +300,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {pageTitles[selectedKey] || "Admin Panel"}
               </div>
               <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                Polya Admin · {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
+                Polya Admin
               </div>
             </div>
           </Space>

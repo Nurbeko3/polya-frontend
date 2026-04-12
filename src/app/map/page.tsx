@@ -34,7 +34,7 @@ export default function MapPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <header className="glass dark:glass sticky top-0 z-50 border-b dark:border-slate-800 shrink-0">
+      <header className="bg-white dark:bg-[#0a0a0a] sticky top-0 z-50 border-b border-slate-100 dark:border-white/[0.06] shrink-0">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group">
             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">

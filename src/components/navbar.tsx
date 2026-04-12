@@ -249,7 +249,8 @@ export function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -261,7 +262,10 @@ export function Navbar() {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideDesktop = desktopDropdownRef.current?.contains(target);
+      const insideMobile = mobileDropdownRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile) {
         setDropdownOpen(false);
       }
     };
@@ -353,7 +357,7 @@ export function Navbar() {
 
           {/* Auth */}
           {isAuthenticated && user ? (
-            <div className="relative ml-1 mr-1" ref={dropdownRef}>
+            <div className="relative ml-1 mr-1" ref={desktopDropdownRef}>
               <button
                 onClick={() => setDropdownOpen((v) => !v)}
                 className={cn(
@@ -408,7 +412,7 @@ export function Navbar() {
           </button>
 
           {isAuthenticated && user ? (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={mobileDropdownRef}>
               <button
                 onClick={() => setDropdownOpen((v) => !v)}
                 className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-[11px] font-black shadow-md"

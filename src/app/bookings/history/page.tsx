@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, Field } from "@/lib/api";
@@ -11,30 +11,41 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { toast } from "sonner";
 import {
   ArrowLeftIcon,
-  CalendarIcon,
+  CalendarDaysIcon,
   ClockIcon,
   MapPinIcon,
   XMarkIcon,
   PhoneIcon,
+  ChatBubbleLeftEllipsisIcon,
   ArrowPathIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { CheckCircleIcon, ClockIcon as ClockSolid, XCircleIcon } from "@heroicons/react/24/solid";
 import { API_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-const fieldIcons: Record<string, string> = {
+const FIELD_ICONS: Record<string, string> = {
   football: "⚽",
   tennis: "🎾",
   basketball: "🏀",
   volleyball: "🏐",
 };
 
-const fieldColors: Record<string, string> = {
-  football: "from-green-500 to-emerald-600",
-  tennis: "from-emerald-500 to-teal-600",
-  basketball: "from-orange-500 to-amber-600",
-  volleyball: "from-pink-500 to-rose-600",
+const FIELD_BG: Record<string, string> = {
+  football:   "bg-emerald-100 dark:bg-emerald-950",
+  tennis:     "bg-teal-100 dark:bg-teal-950",
+  basketball: "bg-orange-100 dark:bg-orange-950",
+  volleyball: "bg-pink-100 dark:bg-pink-950",
 };
+
+type FilterKey = "all" | "pending" | "booked" | "rejected";
+
+const FILTERS: { key: FilterKey; label: string; color: string; activeColor: string }[] = [
+  { key: "all",      label: "Barchasi",    color: "text-slate-500 dark:text-slate-400",    activeColor: "bg-slate-900 dark:bg-white text-white dark:text-slate-900" },
+  { key: "pending",  label: "Kutilmoqda",  color: "text-violet-600 dark:text-violet-400",  activeColor: "bg-violet-600 text-white" },
+  { key: "booked",   label: "Tasdiqlangan",color: "text-emerald-600 dark:text-emerald-400",activeColor: "bg-emerald-600 text-white" },
+  { key: "rejected", label: "Rad etildi",  color: "text-red-500 dark:text-red-400",        activeColor: "bg-red-500 text-white" },
+];
 
 interface BookingWithField extends BookingSlot {
   field?: Field;
@@ -42,11 +53,10 @@ interface BookingWithField extends BookingSlot {
 
 function formatDate(dateStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString("uz-UZ", {
-    weekday: "long",
+  return new Date(year, month - 1, day).toLocaleDateString("uz-UZ", {
+    weekday: "short",
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   });
 }
@@ -59,16 +69,11 @@ function isUpcoming(dateStr: string) {
   return bookingDate >= today;
 }
 
-function BookingSkeleton() {
-  return (
-    <div className="h-40 rounded-[32px] bg-slate-100 dark:bg-white/5 animate-pulse" />
-  );
-}
-
 export default function BookingHistoryPage() {
   const [bookings, setBookings] = useState<BookingWithField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const { user, isAuthenticated, token } = useAuthStore();
   const router = useRouter();
 
@@ -85,35 +90,33 @@ export default function BookingHistoryPage() {
     try {
       api.setToken(token);
       const data = await api.getMyBookings();
-
-      const bookingsWithFields = await Promise.all(
-        data.bookings
-          .filter((b) => b.status === "booked")
-          .map(async (booking) => {
-            try {
-              const response = await fetch(`${API_URL}/fields/${booking.field_id}`);
-              if (response.ok) {
-                const field = await response.json();
-                return { ...booking, field };
-              }
-              return booking;
-            } catch {
-              return booking;
-            }
-          })
+      const all = data.bookings.filter(
+        (b) => b.status === "booked" || b.status === "pending" || b.status === "rejected"
       );
-      setBookings(bookingsWithFields);
-    } catch (error: any) {
+      // Eng yangi bronlar tepada — ID bo'yicha kamayish tartibida
+      all.sort((a, b) => b.id - a.id);
+
+      const withFields = await Promise.all(
+        all.map(async (booking) => {
+          try {
+            const res = await fetch(`${API_URL}/fields/${booking.field_id}`);
+            if (res.ok) return { ...booking, field: await res.json() };
+            return booking;
+          } catch {
+            return booking;
+          }
+        })
+      );
+      setBookings(withFields);
+    } catch {
       toast.error("Bronlarni yuklashda xatolik yuz berdi");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCancelBooking = async (slotId: number) => {
-    const confirmed = window.confirm("Bronni bekor qilishni tasdiqlaysizmi?");
-    if (!confirmed) return;
-
+  const handleCancel = async (slotId: number) => {
+    if (!window.confirm("Bronni bekor qilishni tasdiqlaysizmi?")) return;
     setCancellingId(slotId);
     try {
       api.setToken(token);
@@ -127,131 +130,152 @@ export default function BookingHistoryPage() {
     }
   };
 
-  const upcomingBookings = bookings.filter((b) => isUpcoming(b.date));
-  const pastBookings = bookings.filter((b) => !isUpcoming(b.date));
+  const filtered = useMemo(() => {
+    switch (activeFilter) {
+      case "pending":  return bookings.filter((b) => b.status === "pending");
+      case "booked":   return bookings.filter((b) => b.status === "booked");
+      case "rejected": return bookings.filter((b) => b.status === "rejected");
+      default:         return bookings;
+    }
+  }, [bookings, activeFilter]);
+
+  const counts = useMemo(() => ({
+    all:      bookings.length,
+    pending:  bookings.filter((b) => b.status === "pending").length,
+    booked:   bookings.filter((b) => b.status === "booked").length,
+    rejected: bookings.filter((b) => b.status === "rejected").length,
+  }), [bookings]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-white pb-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white pb-20">
+
       {/* Header */}
-      <header className="glass dark:glass sticky top-0 z-50 border-b border-slate-200 dark:border-white/5">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="group flex items-center gap-2 text-slate-400 dark:text-white/40 hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-all" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Bosh sahifaga</span>
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">Orqaga</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={fetchBookings}
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              title="Yangilash"
             >
-              <ArrowPathIcon className={cn("w-4 h-4 text-slate-400 dark:text-white/40", isLoading && "animate-spin")} />
+              <ArrowPathIcon className={cn("w-4 h-4 text-slate-500 dark:text-slate-400", isLoading && "animate-spin")} />
             </button>
-            <div className="p-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-10 max-w-3xl">
+      <div className="container mx-auto px-4 pt-7 pb-8 max-w-2xl">
+
         {/* Title */}
-        <div className="mb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-2">
-            {user?.name}
-          </p>
-          <h1 className="text-4xl font-black uppercase tracking-tighter dark:text-white">
-            Mening bronlarim
-          </h1>
-          {!isLoading && (
-            <p className="text-slate-400 dark:text-white/30 font-bold text-sm mt-2">
-              {bookings.length > 0
-                ? `${bookings.length} ta bron topildi`
-                : "Hozircha bronlar yo'q"}
+        <div className="mb-6">
+          {user?.name && (
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+              {user.name}
             </p>
           )}
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Bronlar tarixi</h1>
+            {!isLoading && bookings.length > 0 && (
+              <span className="text-sm font-semibold text-slate-400 dark:text-slate-500">
+                {bookings.length} ta
+              </span>
+            )}
+          </div>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => <BookingSkeleton key={i} />)}
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-24 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px]">
-            <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-[28px] flex items-center justify-center mx-auto mb-6">
-              <CalendarIcon className="w-10 h-10 text-slate-300 dark:text-white/20" />
+        {/* Filter chips */}
+        {!isLoading && bookings.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+              <FunnelIcon className="w-4 h-4 text-slate-400 shrink-0" />
+              {FILTERS.map((f) => {
+                const count = counts[f.key];
+                const isActive = activeFilter === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setActiveFilter(f.key)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0",
+                      isActive
+                        ? f.activeColor
+                        : "bg-white dark:bg-[#161616] border border-slate-200 dark:border-white/[0.08] " + f.color
+                    )}
+                  >
+                    {f.label}
+                    {count > 0 && (
+                      <span className={cn(
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-100 dark:bg-white/[0.08] text-slate-500 dark:text-slate-400"
+                      )}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            <h2 className="text-xl font-black uppercase tracking-tight mb-2 dark:text-white">
-              Bronlar yo'q
-            </h2>
-            <p className="text-slate-400 dark:text-white/30 font-bold mb-8 text-sm">
-              Hozircha hech qanday bron mavjud emas
-            </p>
-            <Link href="/">
-              <Button className="rounded-2xl px-8 font-black uppercase tracking-widest h-12">
-                Maydonlarni ko'rish
-              </Button>
-            </Link>
           </div>
-        ) : (
-          <div className="space-y-12">
-            {/* Upcoming */}
-            {upcomingBookings.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <CalendarIcon className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/30">
-                    Kelgusi bronlar
-                  </h2>
-                  <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full">
-                    {upcomingBookings.length}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {upcomingBookings.map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      onCancel={handleCancelBooking}
-                      cancellingId={cancellingId}
-                      upcoming
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+        )}
 
-            {/* History */}
-            {pastBookings.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center">
-                    <ClockIcon className="w-4 h-4 text-slate-400 dark:text-white/30" />
-                  </div>
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/30">
-                    Bron qilish tarixi
-                  </h2>
-                  <span className="text-[10px] font-black bg-slate-100 dark:bg-white/5 text-slate-400 px-3 py-1 rounded-full">
-                    {pastBookings.length}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {pastBookings.map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      onCancel={handleCancelBooking}
-                      cancellingId={cancellingId}
-                      upcoming={false}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+        {/* Loading */}
+        {isLoading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-36 rounded-3xl bg-white dark:bg-[#161616] border border-slate-100 dark:border-white/[0.06] animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isLoading && bookings.length === 0 && (
+          <div className="text-center py-20 bg-white dark:bg-[#161616] border border-slate-100 dark:border-white/[0.06] rounded-3xl">
+            <div className="w-16 h-16 bg-slate-50 dark:bg-white/[0.04] rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <CalendarDaysIcon className="w-8 h-8 text-slate-300 dark:text-white/20" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Bronlar yo'q</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Hozircha hech qanday bron mavjud emas</p>
+            <Link href="/"><Button className="rounded-2xl px-6 h-11 font-semibold">Maydonlarni ko'rish</Button></Link>
+          </div>
+        )}
+
+        {/* Filter empty */}
+        {!isLoading && bookings.length > 0 && filtered.length === 0 && (
+          <div className="text-center py-16 bg-white dark:bg-[#161616] border border-slate-100 dark:border-white/[0.06] rounded-3xl">
+            <div className="w-14 h-14 bg-slate-50 dark:bg-white/[0.04] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FunnelIcon className="w-7 h-7 text-slate-300 dark:text-white/20" />
+            </div>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Bu filtrdagi bronlar yo'q</p>
+            <button
+              onClick={() => setActiveFilter("all")}
+              className="mt-3 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Barcha bronlarni ko'rish
+            </button>
+          </div>
+        )}
+
+        {/* Booking list */}
+        {!isLoading && filtered.length > 0 && (
+          <div className="space-y-3">
+            {filtered.map((b) => (
+              <BookingCard
+                key={b.id}
+                booking={b}
+                onCancel={handleCancel}
+                cancellingId={cancellingId}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -263,118 +287,142 @@ function BookingCard({
   booking,
   onCancel,
   cancellingId,
-  upcoming,
 }: {
   booking: BookingWithField;
   onCancel: (id: number) => void;
   cancellingId: number | null;
-  upcoming: boolean;
 }) {
   const field = booking.field;
-  const color = fieldColors[field?.field_type || "football"];
+  const icon = FIELD_ICONS[field?.field_type ?? "football"] ?? "🏟️";
+  const iconBg = FIELD_BG[field?.field_type ?? "football"] ?? "bg-blue-100 dark:bg-blue-950";
+  const isPending = booking.status === "pending";
+  const isRejected = booking.status === "rejected";
+  const upcoming = isUpcoming(booking.date);
 
   return (
-    <div
-      className={cn(
-        "bg-white dark:bg-white/[0.03] border rounded-[32px] overflow-hidden shadow-sm transition-all",
-        upcoming
-          ? "border-slate-200 dark:border-white/8 hover:border-primary/30 dark:hover:border-primary/20"
-          : "border-slate-100 dark:border-white/5 opacity-70"
-      )}
-    >
-      <div className="flex flex-col sm:flex-row">
-        {/* Left color bar */}
-        <div
-          className={cn(
-            "sm:w-20 h-20 sm:h-auto flex items-center justify-center text-4xl shrink-0 bg-gradient-to-br",
-            upcoming ? color : "from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-800"
-          )}
-        >
-          {fieldIcons[field?.field_type || "football"] || "🏟️"}
+    <div className={cn(
+      "bg-white dark:bg-[#161616] border rounded-3xl overflow-hidden",
+      isRejected  ? "border-red-200 dark:border-red-900/40" :
+      !upcoming   ? "border-slate-100 dark:border-white/[0.04] opacity-70" :
+                    "border-slate-100 dark:border-white/[0.06]"
+    )}>
+      <div className="p-5">
+
+        {/* Top row */}
+        <div className="flex items-start gap-4 mb-4">
+          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0", iconBg)}>
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
+                  {field?.name ?? `Maydon #${booking.field_id}`}
+                </h3>
+                {field?.city && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+                    <MapPinIcon className="w-3 h-3 shrink-0" />
+                    {field.city}{field.address ? `, ${field.address}` : ""}
+                  </p>
+                )}
+              </div>
+              {/* Status badge */}
+              {isRejected ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-xl shrink-0">
+                  <XCircleIcon className="w-3.5 h-3.5" /> Rad etildi
+                </span>
+              ) : isPending ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-1 rounded-xl shrink-0">
+                  <ClockSolid className="w-3.5 h-3.5 animate-pulse" /> Kutilmoqda
+                </span>
+              ) : upcoming ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl shrink-0">
+                  <CheckCircleIcon className="w-3.5 h-3.5" /> Tasdiqlangan
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-slate-400 bg-slate-50 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl shrink-0">
+                  Yakunlandi
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-6">
-          <div className="flex items-start justify-between gap-2 mb-4">
+        {/* Date & time */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+            <CalendarDaysIcon className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium">{formatDate(booking.date)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
+            <ClockIcon className="w-4 h-4 text-slate-400 shrink-0" />
+            {booking.start_time} – {booking.end_time}
+          </div>
+        </div>
+
+        {/* Rejected notice */}
+        {isRejected && (
+          <div className="flex items-start gap-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 rounded-2xl px-4 py-3 mb-4">
+            <XCircleIcon className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-black text-lg dark:text-white leading-tight">
-                {field?.name || `Maydon #${booking.field_id}`}
-              </h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mt-0.5">
-                {field?.field_type}
-              </p>
+              <p className="text-xs font-semibold text-red-700 dark:text-red-400 mb-0.5">Maydon egasi bronni rad etdi</p>
+              {booking.rejection_reason && (
+                <p className="text-xs text-red-600 dark:text-red-400/80 leading-relaxed">
+                  Sabab: <span className="font-medium">{booking.rejection_reason}</span>
+                </p>
+              )}
             </div>
-            {upcoming ? (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0">
-                <CheckCircleIcon className="w-3.5 h-3.5" />
-                Tasdiqlangan
-              </span>
-            ) : (
-              <span className="px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-wider shrink-0">
-                Yakunlangan
-              </span>
-            )}
           </div>
+        )}
 
-          {/* Details grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
-              <CalendarIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
-              <span className="font-bold">{formatDate(booking.date)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
-              <ClockIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
-              <span className="font-bold">{booking.start_time} – {booking.end_time}</span>
-            </div>
-            {field?.address && (
-              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-white/50">
-                <MapPinIcon className="w-4 h-4 shrink-0 text-slate-300 dark:text-white/20" />
-                <span className="font-bold">{field.city}, {field.address}</span>
-              </div>
-            )}
-            {field?.phone_number && (
-              <a
-                href={`tel:${field.phone_number}`}
-                className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition-colors"
-              >
-                <PhoneIcon className="w-4 h-4 shrink-0" />
-                <span className="font-black">{field.phone_number}</span>
-              </a>
-            )}
+        {/* Pending notice */}
+        {isPending && (
+          <div className="flex items-start gap-3 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/40 rounded-2xl px-4 py-3 mb-4">
+            <ClockSolid className="w-4 h-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5 animate-pulse" />
+            <p className="text-xs text-violet-700 dark:text-violet-400 leading-relaxed">
+              Maydon egasi bronni hali <span className="font-semibold">tasdiqlamagan</span>. Telegram orqali xabar yuborildi.
+            </p>
           </div>
+        )}
 
-          {/* Actions */}
-          {upcoming && (
-            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
-              <Link href={`/fields/${booking.field_id}`} className="flex-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full rounded-xl font-black uppercase tracking-wider text-[10px] h-9"
-                >
-                  Batafsil
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl font-black uppercase tracking-wider text-[10px] h-9 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-100 dark:border-red-900/20"
-                onClick={() => onCancel(booking.id)}
-                disabled={cancellingId === booking.id}
-              >
-                {cancellingId === booking.id ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                    Bekor qilinmoqda
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <XMarkIcon className="w-3.5 h-3.5" />
-                    Bekor qilish
-                  </span>
-                )}
+        {/* Confirmed upcoming notice */}
+        {!isPending && !isRejected && upcoming && (
+          <div className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/40 rounded-2xl px-4 py-3 mb-4">
+            <ChatBubbleLeftEllipsisIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+              Bron tasdiqlangan. Maydon bilan bog'laning.
+            </p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/[0.05]">
+          {field?.phone_number && (upcoming || isRejected) && (
+            <a href={`tel:${field.phone_number}`} className="flex-1">
+              <Button variant="outline" size="sm" className="w-full rounded-xl h-9 text-sm font-semibold gap-2 border-slate-200 dark:border-white/[0.08]">
+                <PhoneIcon className="w-4 h-4" />
+                {field.phone_number}
               </Button>
-            </div>
+            </a>
+          )}
+          <Link href={`/fields/${booking.field_id}`} className={cn((!field?.phone_number || (!upcoming && !isRejected)) ? "flex-1" : "")}>
+            <Button variant="outline" size="sm" className="w-full rounded-xl h-9 text-sm font-semibold border-slate-200 dark:border-white/[0.08]">
+              Batafsil
+            </Button>
+          </Link>
+          {(upcoming || isRejected) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-9 text-sm font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 border-red-100 dark:border-red-900/30"
+              onClick={() => onCancel(booking.id)}
+              disabled={cancellingId === booking.id}
+            >
+              {cancellingId === booking.id
+                ? <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                : <XMarkIcon className="w-4 h-4" />
+              }
+            </Button>
           )}
         </div>
       </div>

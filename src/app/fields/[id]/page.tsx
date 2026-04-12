@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Field, BookingSlot } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -13,47 +13,40 @@ import { AddFieldDialog } from "@/components/add-field-dialog";
 import {
   ArrowLeftIcon,
   MapPinIcon,
-  StarIcon,
   ClockIcon,
-  CalendarIcon,
-  CheckIcon,
   PhoneIcon,
-  UserGroupIcon,
-  MapIcon,
+  CheckCircleIcon,
+  CalendarDaysIcon,
+  ChatBubbleLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { formatPrice, formatDate, cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 
-
-const fieldIcons: Record<string, string> = {
-  football: "⚽",
-  tennis: "🎾",
-  basketball: "🏀",
-  volleyball: "🏐",
-};
-
-const fieldColors: Record<string, string> = {
-  football: "from-green-500 to-emerald-600",
-  tennis: "from-emerald-500 to-teal-600",
-  basketball: "from-orange-500 to-amber-600",
-  volleyball: "from-pink-500 to-rose-600",
+const FIELD_META: Record<string, { icon: string; label: string; color: string; bg: string }> = {
+  football:   { icon: "⚽", label: "Futbol",      color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950" },
+  tennis:     { icon: "🎾", label: "Tennis",      color: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-950" },
+  basketball: { icon: "🏀", label: "Basketbol",   color: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-950" },
+  volleyball: { icon: "🏐", label: "Voleybol",    color: "text-pink-600 dark:text-pink-400",       bg: "bg-pink-50 dark:bg-pink-950" },
 };
 
 export default function FieldDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const fieldId = params.id as string;
 
   const [field, setField] = useState<Field | null>(null);
   const [slots, setSlots] = useState<BookingSlot[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlots, setSelectedSlots] = useState<BookingSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState<{ startTime: string; endTime: string; date: Date } | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<{
+    startTime: string;
+    endTime: string;
+    date: Date;
+  } | null>(null);
 
   const { user, isAuthenticated } = useAuthStore();
 
@@ -62,8 +55,8 @@ export default function FieldDetailPage() {
     try {
       const data = await api.get<Field>(`/fields/${fieldId}`);
       setField(data);
-    } catch (error) {
-      console.error("Error fetching field:", error);
+    } catch {
+      // handled in UI
     } finally {
       setIsLoading(false);
     }
@@ -73,26 +66,24 @@ export default function FieldDetailPage() {
     if (!selectedDate || !fieldId) return;
     setSlotsLoading(true);
     try {
-      // Timezone shift muammosini tuzatish: yyyy-MM-dd formatida local vaqt bilan olish
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      
-      const data = await api.get<{ slots: BookingSlot[] }>(`/bookings/slots/${fieldId}?date=${dateStr}`);
+      const y = selectedDate.getFullYear();
+      const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const d = String(selectedDate.getDate()).padStart(2, "0");
+      const data = await api.get<{ slots: BookingSlot[] }>(
+        `/bookings/slots/${fieldId}?date=${y}-${m}-${d}`
+      );
       setSlots(data.slots || []);
-    } catch (error) {
-      console.error("Error fetching slots:", error);
+    } catch {
       setSlots([]);
     } finally {
       setSlotsLoading(false);
     }
   }, [selectedDate, fieldId]);
 
-  useEffect(() => {
-    fetchField();
-  }, [fetchField]);
+  // Bugungi sanani client-da o'rnatamiz (hydration mismatch oldini olish uchun)
+  useEffect(() => { setSelectedDate(new Date()); }, []);
 
+  useEffect(() => { fetchField(); }, [fetchField]);
   useEffect(() => {
     if (selectedDate) {
       setSelectedSlots([]);
@@ -101,21 +92,16 @@ export default function FieldDetailPage() {
   }, [selectedDate, fetchSlots]);
 
   const handleToggleSlot = (slot: BookingSlot) => {
-    setSelectedSlots(prev => {
-      const exists = prev.find(s => s.id === slot.id);
-      if (exists) {
-        return prev.filter(s => s.id !== slot.id);
-      } else {
-        return [...prev, slot].sort((a, b) => a.start_time.localeCompare(b.start_time));
-      }
+    setSelectedSlots((prev) => {
+      const exists = prev.find((s) => s.id === slot.id);
+      if (exists) return prev.filter((s) => s.id !== slot.id);
+      return [...prev, slot].sort((a, b) => a.start_time.localeCompare(b.start_time));
     });
   };
 
   const handleBookSlot = async () => {
     if (!isAuthenticated || !user) {
-      toast.error("Iltimos, avval tizimga kiring!", {
-        description: "Bron qilish uchun ro'yxatdan o'tishingiz yoki tizimga kirishingiz kerak."
-      });
+      toast.error("Iltimos, avval tizimga kiring!");
       return;
     }
     if (selectedSlots.length === 0 || !field) return;
@@ -126,7 +112,6 @@ export default function FieldDetailPage() {
         const lockData = await api.lockSlot(slot.id);
         await api.confirmBooking(slot.id, lockData.lock_token, "naqd");
       }
-
       setBookingSuccess({
         startTime: selectedSlots[0].start_time,
         endTime: selectedSlots[selectedSlots.length - 1].end_time,
@@ -135,329 +120,391 @@ export default function FieldDetailPage() {
       setSelectedSlots([]);
       fetchSlots();
     } catch (error: any) {
-      console.error("Error booking:", error);
-      toast.error(error.message || "Bron qilishda xatolik yuz berdi", {
-        description: "Iltimos, qayta urinib ko'ring.",
-      });
+      toast.error(error.message || "Bron qilishda xatolik yuz berdi");
     } finally {
       setBookingLoading(false);
     }
   };
 
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
-            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">Yuklanmoqda...</p>
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium text-slate-400 dark:text-slate-500">Yuklanmoqda</span>
         </div>
       </div>
     );
   }
 
+  // ── Not found ────────────────────────────────────────────────────────────
   if (!field) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#050505] flex items-center justify-center p-4">
-        <div className="text-center bg-white dark:bg-white/[0.03] p-12 rounded-[48px] border border-slate-200 dark:border-white/5 shadow-2xl">
-          <div className="w-24 h-24 bg-rose-500/10 rounded-[32px] flex items-center justify-center mx-auto mb-6">
-             <MapPinIcon className="w-12 h-12 text-rose-500" />
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 rounded-3xl bg-red-50 dark:bg-red-950 flex items-center justify-center mx-auto mb-6">
+            <MapPinIcon className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-2xl font-black mb-2 dark:text-white uppercase tracking-tight">Maydon topilmadi</h2>
-          <p className="text-slate-500 dark:text-white/40 mb-8 font-bold">Kechirasiz, bu maydon mavjud emas</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Maydon topilmadi</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-8">Bu maydon mavjud emas yoki o'chirilgan.</p>
           <Link href="/">
-            <Button size="lg" className="rounded-2xl px-10 font-black uppercase tracking-widest h-14">Bosh sahifaga qaytish</Button>
+            <Button className="rounded-2xl px-8 h-12 font-semibold">Bosh sahifaga</Button>
           </Link>
         </div>
       </div>
     );
   }
 
+  const meta = FIELD_META[field.field_type] ?? { icon: "🏟️", label: field.field_type, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950" };
+  const totalPrice = field.price_per_hour * selectedSlots.length;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-white pb-20">
-      {/* Header */}
-      <header className="glass dark:glass sticky top-0 z-50 border-b border-slate-200 dark:border-white/5">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <Link href="/" className="group flex items-center gap-2 text-slate-400 dark:text-white/40 hover:text-primary transition-colors">
-            <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-all" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Bosh sahifaga</span>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-white">
+
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">Orqaga</span>
           </Link>
-          <div className="flex items-center gap-4">
-             <div className="p-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-               <ThemeToggle />
-             </div>
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 
-      {/* Hero Image */}
-      <div className="relative h-[400px] bg-slate-200 dark:bg-[#0a0a0a] overflow-hidden">
+      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      <div className="relative bg-slate-100 dark:bg-[#111] h-72 sm:h-96 overflow-hidden">
         {field.image_url ? (
-          <img src={field.image_url} alt={field.name} className="w-full h-full object-cover" />
+          <>
+            <img
+              src={field.image_url}
+              alt={field.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const img = e.currentTarget;
+                img.style.display = "none";
+                const fallback = img.nextElementSibling as HTMLElement | null;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <div className="w-full h-full items-center justify-center hidden absolute inset-0">
+              <span className="text-8xl opacity-30 select-none">{meta.icon}</span>
+            </div>
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <div className={`w-40 h-40 rounded-[40px] bg-gradient-to-br ${fieldColors[field.field_type] || "from-primary to-purple-600"} flex items-center justify-center text-7xl shadow-2xl opacity-80 rotate-3`}>
-              {fieldIcons[field.field_type] || "🏟️"}
-            </div>
+            <span className="text-8xl opacity-30 select-none">{meta.icon}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-[#050505] via-transparent to-black/20" />
-        
+        {/* Solid gradient overlay — no blur */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+        {/* Rating badge */}
         {field.rating > 0 && (
-          <div className="absolute top-10 right-8">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-2xl px-5 py-2.5 rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in">
-              <StarIconSolid className="w-5 h-5 text-amber-400" />
-              <span className="font-black text-white">{field.rating.toFixed(1)}</span>
-            </div>
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-black/70 text-white px-3 py-1.5 rounded-xl">
+            <StarIconSolid className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-sm font-semibold">{field.rating.toFixed(1)}</span>
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+        {/* Field name over hero */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="container mx-auto">
-            <div className="flex flex-col gap-4">
-               <div className={`inline-flex items-center gap-2 w-fit px-4 py-1.5 rounded-full bg-gradient-to-r ${fieldColors[field.field_type]} text-white text-[10px] font-black uppercase tracking-widest shadow-lg`}>
-                  {fieldIcons[field.field_type]} {field.field_type}
-               </div>
-               <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tighter drop-shadow-sm">
-                 {field.name}
-               </h1>
-               <div className="flex items-center gap-2 text-slate-500 dark:text-white/40 font-bold text-sm">
-                 <MapPinIcon className="w-4 h-4 text-primary" />
-                 <span>{field.city}, {field.address}</span>
-               </div>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full mb-3",
+              meta.bg, meta.color
+            )}>
+              {meta.icon} {meta.label}
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {field.name}
+            </h1>
+            <div className="flex items-center gap-1.5 mt-2 text-white/70 text-sm">
+              <MapPinIcon className="w-3.5 h-3.5 shrink-0" />
+              <span>{field.city}, {field.address}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-6 relative z-10">
-        <div className="grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
-            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-6">Haqida</h2>
-                <p className="text-lg font-bold text-slate-600 dark:text-white/70 leading-relaxed max-w-2xl">
-                  {field.description || "Bu ajoyib sport maydoni. Keling va o'zingiz zavq oling!"}
-                </p>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-10">
-                  {[
-                    { icon: UserGroupIcon, label: "Jamoa o'yini", color: "text-blue-500", bg: "bg-blue-500/10" },
-                    { icon: MapIcon, label: "Yaxshi lokatsiya", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                    { icon: StarIcon, label: "Yuqori reyting", color: "text-amber-500", bg: "bg-amber-500/10" },
-                  ].map((feature, i) => (
-                    <div key={i} className="flex flex-col items-start gap-3 p-6 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[32px] transition-all hover:border-primary/20 group">
-                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", feature.bg)}>
-                        <feature.icon className={cn("w-6 h-6", feature.color)} />
-                      </div>
-                      <span className="text-[11px] font-black uppercase tracking-[0.1em] dark:text-white/60">{feature.label}</span>
-                    </div>
-                  ))}
+      {/* ── Body ───────────────────────────────────────────────────────── */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-[1fr_340px] gap-6">
+
+          {/* ── Left column ─────────────────────────────────────────── */}
+          <div className="space-y-6">
+
+            {/* Info strip */}
+            <div className="bg-white dark:bg-[#161616] rounded-3xl border border-slate-100 dark:border-white/[0.06] p-6 flex flex-wrap gap-4">
+              {/* Price */}
+              <div className="flex items-center gap-3 flex-1 min-w-[140px]">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold text-base">₩</span>
                 </div>
+                <div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Soatlik narx</p>
+                  <p className="text-base font-bold text-slate-900 dark:text-white">{formatPrice(field.price_per_hour)} so'm</p>
+                </div>
+              </div>
+
+              {/* Hours */}
+              <div className="flex items-center gap-3 flex-1 min-w-[140px]">
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950 flex items-center justify-center shrink-0">
+                  <ClockIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Ish vaqti</p>
+                  <p className="text-base font-bold text-slate-900 dark:text-white">08:00 – 22:00</p>
+                </div>
+              </div>
+
+              {/* Phone */}
+              {field.phone_number && (
+                <a
+                  href={`tel:${field.phone_number}`}
+                  className="flex items-center gap-3 flex-1 min-w-[140px] group"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0">
+                    <PhoneIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Telefon</p>
+                    <p className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {field.phone_number}
+                    </p>
+                  </div>
+                </a>
+              )}
             </div>
 
-            <div id="booking-section" className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5">
-                <div className="flex items-center justify-between mb-10">
-                   <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-                         <CalendarIcon className="w-5 h-5 text-primary" />
-                      </div>
-                      <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20">Bron qilish</h2>
-                   </div>
+            {/* Description */}
+            {field.description && (
+              <div className="bg-white dark:bg-[#161616] rounded-3xl border border-slate-100 dark:border-white/[0.06] p-6">
+                <h2 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                  Maydon haqida
+                </h2>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {field.description}
+                </p>
+              </div>
+            )}
+
+            {/* ── Booking section ──────────────────────────────────── */}
+            <div id="booking-section" className="bg-white dark:bg-[#161616] rounded-3xl border border-slate-100 dark:border-white/[0.06] p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
+                  <CalendarDaysIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                
-                <div className="flex flex-col xl:flex-row gap-10">
-                  <div className="flex-shrink-0 bg-slate-50 dark:bg-white/[0.02] p-6 rounded-[32px] border border-slate-100 dark:border-white/5">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      className="rounded-2xl"
-                      disabled={(date) => date < new Date()}
-                    />
-                  </div>
-                  
-                  <div className="flex-1">
-                    {selectedDate ? (
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-white/[0.03] rounded-3xl border border-slate-100 dark:border-white/5">
-                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                 <ClockIcon className="w-5 h-5 text-primary" />
-                              </div>
-                              <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">{formatDate(selectedDate)}</span>
-                           </div>
-                        </div>
-                        <TimeSlotsGrid
-                          slots={slots}
-                          selectedSlots={selectedSlots}
-                          onToggleSlot={handleToggleSlot}
-                          isLoading={slotsLoading}
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-full min-h-[300px] flex items-center justify-center bg-slate-50 dark:bg-white/[0.02] rounded-[40px] border-2 border-dashed border-slate-100 dark:border-white/5">
-                        <div className="text-center">
-                          <CalendarIcon className="w-12 h-12 text-slate-200 dark:text-white/10 mx-auto mb-4" />
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20">Sana tanlang</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Bron qilish</h2>
+              </div>
+
+              <div className="flex flex-col xl:flex-row gap-6">
+                {/* Calendar */}
+                <div className="shrink-0 bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl border border-slate-100 dark:border-white/[0.06] p-4 self-start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    className="rounded-xl"
+                  />
                 </div>
 
-                {bookingSuccess && (
-                  <div className="mt-10 bg-emerald-500/10 border border-emerald-500/30 rounded-[40px] p-10 animate-in slide-in-from-top-4">
-                    <div className="flex items-center gap-6 mb-8">
-                      <div className="w-16 h-16 rounded-[24px] bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 shrink-0">
-                        <CheckIcon className="w-8 h-8" />
+                {/* Slots */}
+                <div className="flex-1 min-w-0">
+                  {selectedDate ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                        <span>{formatDate(selectedDate)}</span>
+                        <span>•</span>
+                        <span>{slots.filter(s => s.status === "available").length} ta bo'sh</span>
+                      </div>
+                      <TimeSlotsGrid
+                        slots={slots}
+                        selectedSlots={selectedSlots}
+                        onToggleSlot={handleToggleSlot}
+                        isLoading={slotsLoading}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-full min-h-[200px] flex items-center justify-center bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/[0.06]">
+                      <div className="text-center">
+                        <CalendarDaysIcon className="w-8 h-8 text-slate-300 dark:text-white/20 mx-auto mb-2" />
+                        <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Sana tanlang</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Success state ──────────────────────────────────── */}
+              {bookingSuccess && (
+                <div className="mt-6 space-y-3">
+                  {/* Main confirmation */}
+                  <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center shrink-0">
+                        <CheckCircleIcon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-0.5">
+                          Bron muvaffaqiyatli qabul qilindi!
+                        </p>
+                        <p className="text-base font-bold text-slate-900 dark:text-white">
+                          {bookingSuccess.startTime} – {bookingSuccess.endTime}
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {formatDate(bookingSuccess.date)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Telegram notification info */}
+                  <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                        <ChatBubbleLeftEllipsisIcon className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">Bron tasdiqlandi!</p>
-                        <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                          {bookingSuccess.startTime} – {bookingSuccess.endTime} • {formatDate(bookingSuccess.date)}
-                        </h4>
+                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">
+                          Maydon egasiga Telegram orqali yuborildi
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                          Bron so'rovingiz maydon egasiga Telegram orqali yetkazildi. Tasdiqlash uchun quyidagi raqamga qo'ng'iroq qiling yoki xabar yuboring.
+                        </p>
+                        {field.phone_number && (
+                          <a
+                            href={`tel:${field.phone_number}`}
+                            className="inline-flex items-center gap-2 mt-3 bg-white dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                          >
+                            <PhoneIcon className="w-4 h-4" />
+                            {field.phone_number}
+                          </a>
+                        )}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      {field.phone_number && (
-                        <a
-                          href={`tel:${field.phone_number}`}
-                          className="flex items-center gap-4 p-5 bg-white dark:bg-white/5 border border-emerald-200 dark:border-emerald-500/20 rounded-[28px] hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
-                        >
-                          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <PhoneIcon className="w-5 h-5 text-emerald-500" />
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Polya egasi bilan bog'laning</p>
-                            <p className="font-black text-slate-900 dark:text-white text-lg">{field.phone_number}</p>
-                          </div>
-                        </a>
-                      )}
-                      <div className="flex items-center gap-4 p-5 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-[28px]">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                          <MapPinIcon className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">Manzil</p>
-                          <p className="font-bold text-slate-900 dark:text-white text-sm">{field.city}, {field.address}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setBookingSuccess(null)}
-                      className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-white/60 transition-colors"
-                    >
-                      Boshqa vaqt bron qilish →
-                    </button>
                   </div>
-                )}
 
-                {!bookingSuccess && selectedSlots.length > 0 && (
-                  <div className="mt-10 bg-primary/10 border border-primary/20 dark:border-primary/10 rounded-[40px] p-10 animate-in slide-in-from-top-4">
-                    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
-                       <div className="flex items-center gap-6">
-                          <div className="w-16 h-16 rounded-[24px] bg-primary flex items-center justify-center text-white shadow-xl shadow-primary/30">
-                             <CheckIcon className="w-8 h-8" />
-                          </div>
-                          <div>
-                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Tanlangan vaqt</p>
-                             <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                                {selectedSlots.length} soat • {selectedSlots[0].start_time} - {selectedSlots[selectedSlots.length - 1].end_time}
-                             </h4>
-                          </div>
-                       </div>
+                  <button
+                    onClick={() => setBookingSuccess(null)}
+                    className="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  >
+                    Boshqa vaqt bron qilish →
+                  </button>
+                </div>
+              )}
 
-                       <div className="text-right">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 leading-none">Taxminiy narx</p>
-                          <h4 className="text-4xl font-black text-primary">{formatPrice(field.price_per_hour * selectedSlots.length)}</h4>
-                       </div>
-                    </div>
-
-                    <Button
-                      className="w-full h-16 mt-10 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 group overflow-hidden relative"
-                      size="lg"
-                      onClick={handleBookSlot}
-                      disabled={bookingLoading}
-                    >
-                      {bookingLoading ? (
-                        <span className="relative z-10 flex items-center gap-3">
-                          <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                          Bronlanmoqda...
+              {/* ── Selection summary ─────────────────────────────── */}
+              {!bookingSuccess && selectedSlots.length > 0 && (
+                <div className="mt-6 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-2xl p-5">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-0.5">
+                        Tanlangan vaqt
+                      </p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white">
+                        {selectedSlots[0].start_time} – {selectedSlots[selectedSlots.length - 1].end_time}
+                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 ml-2">
+                          ({selectedSlots.length} soat)
                         </span>
-                      ) : (
-                        <>
-                          <span className="relative z-10">Bron qilish</span>
-                          <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
-                        </>
-                      )}
-                    </Button>
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Narx</p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatPrice(totalPrice)}
+                      </p>
+                    </div>
                   </div>
-                )}
+                  <Button
+                    className="w-full h-12 rounded-2xl font-semibold text-base"
+                    onClick={handleBookSlot}
+                    disabled={bookingLoading}
+                  >
+                    {bookingLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Bronlanmoqda...
+                      </span>
+                    ) : (
+                      `Bron qilish • ${formatPrice(totalPrice)} so'm`
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:sticky lg:top-24 h-fit space-y-8">
-            {/* Price Card */}
-            <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-[48px] p-10 backdrop-blur-3xl shadow-2xl shadow-black/5 overflow-hidden group">
-              <div className="absolute -top-1 left-0 right-0 h-4 bg-gradient-to-r from-primary to-purple-600 rounded-t-[48px]" />
-              
-              <div className="text-center mb-10">
-                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-white/20 mb-2">Soatlik narx</div>
-                <div className="text-5xl font-black text-primary drop-shadow-sm">
-                  {formatPrice(field.price_per_hour)}
-                </div>
-              </div>
-              
+          {/* ── Right sidebar ───────────────────────────────────────── */}
+          <div className="lg:sticky lg:top-24 h-fit space-y-4">
+
+            {/* Price card */}
+            <div className="bg-white dark:bg-[#161616] rounded-3xl border border-slate-100 dark:border-white/[0.06] p-6">
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                Soatlik narx
+              </p>
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                {formatPrice(field.price_per_hour)}
+              </p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">so'm / soat</p>
+
               <div className="space-y-3">
-                {[
-                  { icon: MapPinIcon, label: "Manzil", value: field.address, color: "text-blue-500", bg: "bg-blue-500/10" },
-                  { icon: ClockIcon, label: "Ish vaqti", value: "08:00 - 22:00", color: "text-purple-500", bg: "bg-purple-500/10" },
-                  ...(field.phone_number ? [{ icon: PhoneIcon, label: "Polya egasi", value: field.phone_number, color: "text-emerald-500", bg: "bg-emerald-500/10" }] : []),
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-4 p-5 bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[28px] transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.04]">
-                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-black/[0.02]", item.bg)}>
-                      <item.icon className={cn("w-5 h-5", item.color)} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">{item.label}</p>
-                      <p className="font-bold dark:text-white text-sm truncate">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl">
+                  <MapPinIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="text-sm text-slate-600 dark:text-slate-300 truncate">
+                    {field.city}, {field.address}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl">
+                  <ClockIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="text-sm text-slate-600 dark:text-slate-300">08:00 – 22:00</span>
+                </div>
+                {field.phone_number && (
+                  <a
+                    href={`tel:${field.phone_number}`}
+                    className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl hover:bg-slate-100 dark:hover:bg-[#222] transition-colors"
+                  >
+                    <PhoneIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="text-sm text-slate-600 dark:text-slate-300">{field.phone_number}</span>
+                  </a>
+                )}
               </div>
 
               <Button
-                className="w-full mt-10 h-16 rounded-[28px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary/20"
-                size="lg"
-                onClick={() => {
-                  document.getElementById("booking-section")?.scrollIntoView({ behavior: "smooth" });
-                }}
+                className="w-full mt-5 h-12 rounded-2xl font-semibold"
+                onClick={() => document.getElementById("booking-section")?.scrollIntoView({ behavior: "smooth" })}
               >
                 Bron qilish
               </Button>
             </div>
 
-            {/* Info Card */}
-            <div className="bg-gradient-to-br from-primary/10 to-purple-600/10 border border-primary/20 dark:border-primary/10 rounded-[40px] p-8 backdrop-blur-xl">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Maydon egasimisiz?</h3>
-                <p className="text-sm font-bold text-slate-600 dark:text-white/50 mb-6">
-                  Sizning maydoningiz hali ro'yxatda yo'qmi? Uni qo'shing va mijozlarni qabul qiling.
-                </p>
-                <AddFieldDialog 
-                  trigger={
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-primary/20 dark:border-white/10 font-bold uppercase tracking-widest text-[10px] bg-white/50 dark:bg-white/5 shadow-sm hover:border-primary/50 transition-all">
-                      Maydon qo'shish
-                    </Button>
-                  }
-                />
+            {/* Field owner promo */}
+            <div className="bg-white dark:bg-[#161616] rounded-3xl border border-slate-100 dark:border-white/[0.06] p-6">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
+                Maydon egasimisiz?
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Maydoningizni qo'shing va yangi mijozlarni qabul qiling.
+              </p>
+              <AddFieldDialog
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="w-full h-11 rounded-2xl font-semibold text-sm"
+                  >
+                    Maydon qo'shish
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

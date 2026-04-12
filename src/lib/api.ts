@@ -220,7 +220,7 @@ export interface BookingSlot {
   date: string;
   start_time: string;
   end_time: string;
-  status: "available" | "locked" | "booked";
+  status: "available" | "locked" | "pending" | "booked";
   locked_until: string | null;
 }
 

@@ -122,13 +122,12 @@
   100% { background-position: 0% 50%; }
 }
 
-/* ── Smooth page transitions ── */
+/* ── Smooth theme color transitions (opacity/backdrop-filter excluded to avoid nav flash) ── */
 * {
-  transition-property: background-color, border-color, color, fill, stroke, opacity;
+  transition-property: background-color, border-color, color, fill, stroke;
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Don't transition transforms and layout-affecting props globally */
 *, *::before, *::after {
   box-sizing: border-box;
 }

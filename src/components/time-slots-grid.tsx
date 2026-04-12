@@ -2,7 +2,7 @@
 
 import { BookingSlot } from "@/types";
 import { cn } from "@/lib/utils";
-import { ClockIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon } from "@heroicons/react/24/solid";
 
 interface TimeSlotsGridProps {
   slots: BookingSlot[];
@@ -19,11 +19,11 @@ export function TimeSlotsGrid({
 }: TimeSlotsGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[...Array(8)].map((_, i) => (
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        {[...Array(10)].map((_, i) => (
           <div
             key={i}
-            className="h-16 rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse"
+            className="h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.04] animate-pulse"
           />
         ))}
       </div>
@@ -32,19 +32,23 @@ export function TimeSlotsGrid({
 
   if (slots.length === 0) {
     return (
-      <div className="text-center py-12 bg-slate-50 dark:bg-white/5 rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/10">
-         <ClockIcon className="w-8 h-8 text-slate-300 dark:text-white/20 mx-auto mb-3" />
-         <span className="text-sm font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">Vaqtlar topilmadi</span>
+      <div className="flex flex-col items-center justify-center py-12 bg-slate-50 dark:bg-[#1a1a1a] rounded-2xl border border-dashed border-slate-200 dark:border-white/[0.06]">
+        <LockClosedIcon className="w-6 h-6 text-slate-300 dark:text-white/20 mb-2" />
+        <span className="text-sm font-medium text-slate-400 dark:text-slate-500">
+          Bu kun uchun vaqt topilmadi
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
       {slots.map((slot) => {
-        const isAvailable = slot.status === "available";
-        const isSelected = selectedSlots.some(s => s.id === slot.id);
+        const isAvailable = slot.status === "available" || slot.status === "rejected";
+        const isSelected = selectedSlots.some((s) => s.id === slot.id);
         const isLocked = slot.status === "locked";
+        const isPending = slot.status === "pending";
+        const isBooked = slot.status === "booked";
 
         return (
           <button
@@ -52,25 +56,52 @@ export function TimeSlotsGrid({
             onClick={() => isAvailable && onToggleSlot(slot)}
             disabled={!isAvailable}
             className={cn(
-              "group relative flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 overflow-hidden",
-              isAvailable && !isSelected && "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-primary hover:scale-[1.02] cursor-pointer",
-              isSelected && "bg-primary border-primary text-white shadow-xl shadow-primary/20 scale-[1.02]",
-              !isAvailable && !isLocked && "bg-slate-50 dark:bg-white/[0.02] border-slate-100 dark:border-white/[0.05] text-slate-300 dark:text-white/10 cursor-not-allowed opacity-60",
-              isLocked && "bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20 text-orange-500 dark:text-orange-400 cursor-not-allowed"
+              "relative flex flex-col items-center justify-center h-14 rounded-2xl border text-sm font-semibold transition-all duration-150 select-none",
+              isAvailable && !isSelected && [
+                "bg-white dark:bg-[#1e1e1e]",
+                "border-slate-200 dark:border-white/[0.08]",
+                "text-slate-700 dark:text-slate-200",
+                "hover:border-blue-400 dark:hover:border-blue-500",
+                "hover:bg-blue-50 dark:hover:bg-blue-950/60",
+                "hover:text-blue-700 dark:hover:text-blue-300",
+                "cursor-pointer active:scale-95",
+              ],
+              isSelected && [
+                "bg-blue-600 dark:bg-blue-500",
+                "border-blue-600 dark:border-blue-500",
+                "text-white",
+                "shadow-md shadow-blue-600/25 dark:shadow-blue-500/20",
+                "cursor-pointer active:scale-95",
+              ],
+              isLocked && [
+                "bg-amber-50 dark:bg-amber-950/40",
+                "border-amber-200 dark:border-amber-700/40",
+                "text-amber-500 dark:text-amber-400",
+                "cursor-not-allowed",
+              ],
+              isPending && [
+                "bg-violet-50 dark:bg-violet-950/40",
+                "border-violet-200 dark:border-violet-700/40",
+                "text-violet-500 dark:text-violet-400",
+                "cursor-not-allowed",
+              ],
+              isBooked && [
+                "bg-slate-50 dark:bg-[#1a1a1a]",
+                "border-slate-100 dark:border-white/[0.04]",
+                "text-slate-300 dark:text-white/20",
+                "cursor-not-allowed",
+              ]
             )}
           >
-            {isLocked ? (
-              <LockClosedIcon className="w-4 h-4 mb-1" />
-            ) : (
-              <ClockIcon className={cn("w-4 h-4 mb-1 transition-colors", isAvailable && !isSelected ? "text-primary/40 group-hover:text-primary" : "text-inherit")} />
+            {isLocked && (
+              <LockClosedIcon className="w-3 h-3 mb-0.5 opacity-70" />
             )}
-            <span className="text-sm font-black uppercase tracking-tight">
-              {slot.start_time}
-            </span>
-            
-            {/* Glossy Overlay for selection */}
-            {isSelected && (
-               <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
+            <span className="leading-none">{slot.start_time}</span>
+            {isPending && (
+              <span className="text-[10px] font-medium opacity-70 mt-0.5">kutilmoqda</span>
+            )}
+            {isBooked && (
+              <span className="text-[10px] font-medium opacity-60 mt-0.5">band</span>
             )}
           </button>
         );
