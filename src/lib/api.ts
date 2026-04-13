@@ -220,8 +220,9 @@ export interface BookingSlot {
   date: string;
   start_time: string;
   end_time: string;
-  status: "available" | "locked" | "pending" | "booked";
+  status: "available" | "locked" | "pending" | "booked" | "rejected";
   locked_until: string | null;
+  rejection_reason?: string | null;
 }
 
 export interface BookingConfirmResponse {
