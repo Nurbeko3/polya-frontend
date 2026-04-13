@@ -21,7 +21,7 @@ const LocationPicker = dynamic(
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { api } from "@/lib/api";
 
 interface AddFieldDialogProps {
   onSuccess?: () => void;
@@ -60,18 +60,8 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
     // Upload immediately
     setImageUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch(`${API_URL}/fields/apply/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Rasm yuklashda xatolik");
-      }
-      const data = await res.json();
-      setUploadedUrl(data.url);
+      const url = await api.uploadFieldImage(file);
+      setUploadedUrl(url);
     } catch (err: any) {
       message.error(err.message || "Rasm yuklashda xatolik yuz berdi");
       setImageFile(null);
@@ -119,35 +109,25 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/fields/apply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          field_name: values.name,
-          field_type: values.field_type,
-          city: location.city || "Toshkent",
-          address: location.address || `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`,
-          price_per_hour: Number(values.price_per_hour),
-          phone_number: values.phone_number,
-          description: values.description,
-          image_url: uploadedUrl ?? undefined,
-          latitude: location.lat,
-          longitude: location.lng,
-        }),
+      await api.submitApplication({
+        field_name: values.name,
+        field_type: values.field_type,
+        city: location.city || "Toshkent",
+        address: location.address || `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`,
+        price_per_hour: Number(values.price_per_hour),
+        phone_number: values.phone_number,
+        description: values.description,
+        image_url: uploadedUrl ?? null,
+        latitude: location.lat,
+        longitude: location.lng,
       });
-
-      if (response.ok) {
-        message.success("Ariza muvaffaqiyatli yuborildi!");
-        setOpen(false);
-        form.resetFields();
-        removeImage();
-        onSuccess?.();
-      } else {
-        const err = await response.json().catch(() => ({}));
-        message.error(err.detail || "Xatolik yuz berdi");
-      }
-    } catch {
-      message.error("Xatolik yuz berdi");
+      message.success("Ariza muvaffaqiyatli yuborildi!");
+      setOpen(false);
+      form.resetFields();
+      removeImage();
+      onSuccess?.();
+    } catch (err: any) {
+      message.error(err.message || "Xatolik yuz berdi");
     } finally {
       setIsLoading(false);
     }

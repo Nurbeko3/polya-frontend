@@ -86,8 +86,24 @@ export default function AdminBookingsPage() {
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<Booking[]>("/admin/bookings");
-      setBookings(Array.isArray(data) ? data : []);
+      const data = await api.getAdminBookings();
+      // Supabase join ma'lumotlarini flat qilamiz
+      const flat = data.map((b: any) => ({
+        id: b.id,
+        field_name: b.fields?.name || `Maydon #${b.field_id}`,
+        field_id: b.field_id,
+        user_name: b.profiles?.name || "Noma'lum",
+        user_phone: b.profiles?.phone || "",
+        booking_date: b.date,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        total_price: 0,
+        status: b.status,
+        payment_status: "pending",
+        payment_method: null,
+        created_at: b.created_at,
+      }));
+      setBookings(flat);
     } catch (error) {
       console.error("Error fetching bookings:", error);
     } finally {

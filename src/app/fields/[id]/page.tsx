@@ -53,7 +53,7 @@ export default function FieldDetailPage() {
   const fetchField = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<Field>(`/fields/${fieldId}`);
+      const data = await api.getField(fieldId);
       setField(data);
     } catch {
       // handled in UI
@@ -69,9 +69,7 @@ export default function FieldDetailPage() {
       const y = selectedDate.getFullYear();
       const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
       const d = String(selectedDate.getDate()).padStart(2, "0");
-      const data = await api.get<{ slots: BookingSlot[] }>(
-        `/bookings/slots/${fieldId}?date=${y}-${m}-${d}`
-      );
+      const data = await api.getSlots(Number(fieldId), `${y}-${m}-${d}`);
       setSlots(data.slots || []);
     } catch {
       setSlots([]);
@@ -108,9 +106,19 @@ export default function FieldDetailPage() {
 
     setBookingLoading(true);
     try {
+      const y = selectedDate!.getFullYear();
+      const m = String(selectedDate!.getMonth() + 1).padStart(2, "0");
+      const d = String(selectedDate!.getDate()).padStart(2, "0");
+      const dateStr = `${y}-${m}-${d}`;
+
       for (const slot of selectedSlots) {
-        const lockData = await api.lockSlot(slot.id);
-        await api.confirmBooking(slot.id, lockData.lock_token, "naqd");
+        const lockData = await api.lockVirtualSlot(
+          Number(fieldId),
+          dateStr,
+          slot.start_time,
+          slot.end_time
+        );
+        await api.confirmBooking(lockData.slot_id, lockData.lock_token, "naqd");
       }
       setBookingSuccess({
         startTime: selectedSlots[0].start_time,

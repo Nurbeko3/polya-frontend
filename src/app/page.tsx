@@ -8,7 +8,7 @@ import { Logo } from "@/components/logo";
 import { AddFieldDialog } from "@/components/add-field-dialog";
 import { Navbar } from "@/components/navbar";
 import Link from "next/link";
-import { API_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 import { Typography, Card, Row, Col, Button, Spin, Empty, Badge, Space, Divider } from "antd";
 import { EnvironmentOutlined, TrophyOutlined, CalendarOutlined, UserOutlined, RightOutlined, SearchOutlined, PlusOutlined, SafetyCertificateOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -28,8 +28,7 @@ export default function HomePage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/stats/`);
-      const data = await response.json();
+      const data = await api.getStats();
       setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -44,14 +43,7 @@ export default function HomePage() {
   }) => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters?.city) params.append("city", filters.city);
-      if (filters?.field_type) params.append("field_type", filters.field_type);
-      if (filters?.min_price) params.append("min_price", filters.min_price);
-      if (filters?.max_price) params.append("max_price", filters.max_price);
-
-      const response = await fetch(`${API_URL}/fields/${params.toString() ? `?${params.toString()}` : ""}`);
-      const data = await response.json();
+      const data = await api.getFields(filters);
       setFields(data.fields || []);
     } catch (error) {
       console.error("Error fetching fields:", error);

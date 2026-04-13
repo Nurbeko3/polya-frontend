@@ -22,7 +22,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Form, Input, Button as AntButton, message } from "antd";
-import { UserOutlined, LockOutlined, PhoneOutlined } from "@ant-design/icons";
+import { UserOutlined, LockOutlined, PhoneOutlined, MailOutlined } from "@ant-design/icons";
 
 /* ─── Liquid Glass helpers ──────────────────────────────────── */
 const glass = {
@@ -60,14 +60,15 @@ function AuthModal({
 
   const handleSubmit = async (values: {
     name?: string;
-    phone: string;
+    email: string;
+    phone?: string;
     password: string;
   }) => {
     try {
       if (mode === "login") {
-        await login(values.phone, values.password);
+        await login(values.email, values.password);
       } else {
-        await signup(values.name!, values.phone, values.password);
+        await signup(values.name!, values.email, values.phone!, values.password);
       }
       form.resetFields();
       onClose();
@@ -114,7 +115,7 @@ function AuthModal({
           </p>
         </div>
 
-        <Form form={form} onFinish={handleSubmit} layout="vertical" requiredMark={false}>
+        <Form form={form} onFinish={handleSubmit} layout="vertical" requiredMark={false} initialValues={{ phone: "+998" }}>
           {mode === "signup" && (
             <Form.Item name="name" rules={[{ required: true, message: "Ismingizni kiriting" }]}>
               <Input
@@ -126,15 +127,27 @@ function AuthModal({
               />
             </Form.Item>
           )}
-          <Form.Item name="phone" rules={[{ required: true, message: "Telefon raqamingizni kiriting" }]}>
+          <Form.Item name="email" rules={[{ required: true, message: "Emailni kiriting" }, { type: "email", message: "To'g'ri email kiriting" }]}>
             <Input
-              prefix={<PhoneOutlined className="opacity-30" />}
-              placeholder="+998 90 123 45 67"
+              prefix={<MailOutlined className="opacity-30" />}
+              placeholder="email@example.com"
               size="large"
               className="!rounded-2xl"
               style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", border: "1px solid " + (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)") }}
             />
           </Form.Item>
+          {mode === "signup" && (
+            <Form.Item name="phone" rules={[{ required: true, message: "Telefon raqamingizni kiriting" }]} normalize={(val) => val?.replace(/\s/g, "")}>
+              <Input
+                prefix={<PhoneOutlined className="opacity-30" />}
+                placeholder="+998901234567"
+                size="large"
+                className="!rounded-2xl"
+                maxLength={13}
+                style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", border: "1px solid " + (isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)") }}
+              />
+            </Form.Item>
+          )}
           <Form.Item name="password" rules={[{ required: true, message: "Parolingizni kiriting" }]}>
             <Input.Password
               prefix={<LockOutlined className="opacity-30" />}

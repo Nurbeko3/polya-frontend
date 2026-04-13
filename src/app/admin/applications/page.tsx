@@ -12,7 +12,7 @@ import {
   DeleteOutlined, ExclamationCircleOutlined, FileTextOutlined, ReloadOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import { API_URL, api } from "@/lib/api";
+import { api } from "@/lib/api";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -58,8 +58,8 @@ export default function AdminApplicationsPage() {
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      const param = filterStatus !== "all" ? `?status=${filterStatus}` : "";
-      const data = await api.get<Application[]>(`/admin/applications${param}`);
+      const status = filterStatus !== "all" ? filterStatus : undefined;
+      const data = await api.getApplications(status);
       setApplications(Array.isArray(data) ? data : []);
     } catch {
       message.error("Arizalarni yuklashda xatolik");
@@ -71,7 +71,11 @@ export default function AdminApplicationsPage() {
   const handleAction = async (id: number, action: "approve" | "reject") => {
     setActionLoading(id);
     try {
-      await api.post(`/admin/applications/${id}/${action}`);
+      if (action === "approve") {
+        await api.approveApplication(id);
+      } else {
+        await api.rejectApplication(id);
+      }
       setApplications((apps) => apps.filter((a) => a.id !== id));
       setDetailApp(null);
       message.success(action === "approve" ? "✅ Ariza tasdiqlandi va maydon yaratildi" : "Ariza rad etildi");
@@ -92,7 +96,10 @@ export default function AdminApplicationsPage() {
       cancelText: "Bekor",
       onOk: async () => {
         try {
-          await api.delete<any>("/admin/applications/clear-processed");
+          // Tasdiqlangan va rad etilganlarni o'chirish
+          const processed = await api.getApplications();
+          const toDelete = processed.filter((a: any) => a.status !== "pending");
+          await Promise.all(toDelete.map((a: any) => api.deleteApplication(a.id)));
           message.success("Arxiv tozalandi");
           fetchApplications();
         } catch (error: any) {
@@ -125,7 +132,7 @@ export default function AdminApplicationsPage() {
       render: (_, record) => {
         const cfg = fieldTypeConfig[record.field_type];
         const imgSrc = record.image_url
-          ? record.image_url.startsWith("http") ? record.image_url : `${API_URL.replace("/api/v1", "")}${record.image_url}`
+          ? record.image_url
           : undefined;
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -372,7 +379,7 @@ export default function AdminApplicationsPage() {
             {detailApp.image_url && (
               <div style={{ marginBottom: 16, borderRadius: 12, overflow: "hidden", height: 200 }}>
                 <img
-                  src={detailApp.image_url.startsWith("http") ? detailApp.image_url : `${API_URL.replace("/api/v1", "")}${detailApp.image_url}`}
+                  src={detailApp.image_url}
                   alt="field"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />

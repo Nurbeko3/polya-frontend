@@ -18,7 +18,7 @@ const { Text } = Typography;
 const { Search } = Input;
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   phone: string;
   email: string | null;
@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<User[]>("/admin/users");
+      const data = await api.getAdminUsers();
       setUsers(Array.isArray(data) ? data : []);
     } catch {
       message.error("Foydalanuvchilarni yuklashda xatolik");
@@ -63,14 +63,8 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleToggleStatus = async (id: number) => {
-    try {
-      await api.post(`/admin/users/${id}/toggle-status`);
-      setUsers(users.map((u) => u.id === id ? { ...u, is_active: !u.is_active } : u));
-      message.success("Holat o'zgartirildi");
-    } catch {
-      message.error("Xatolik yuz berdi");
-    }
+  const handleToggleStatus = async (id: string) => {
+    message.info("Bu funksiya Supabase Auth orqali boshqariladi");
   };
 
   const handleEdit = (user: User) => {
@@ -86,28 +80,19 @@ export default function AdminUsersPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await api.delete(`/admin/users/${id}`);
-      setUsers(users.filter((u) => u.id !== id));
-      message.success("Foydalanuvchi o'chirildi");
-    } catch {
-      message.error("O'chirishda xatolik");
-    }
+  const handleDelete = async (id: string) => {
+    message.info("Foydalanuvchi o'chirish Supabase Dashboard orqali amalga oshiriladi");
   };
 
   const handleSubmit = async (values: any) => {
     setIsSubmitting(true);
     try {
       if (editingUser) {
-        const updateData = { name: values.name, phone: values.phone, email: values.email || null, is_admin: values.is_admin };
-        await api.put(`/admin/users/${editingUser.id}`, updateData);
-        setUsers(users.map((u) => u.id === editingUser.id ? { ...u, ...updateData } : u));
+        await api.updateUserRole(String(editingUser.id), values.is_admin || false);
+        setUsers(users.map((u) => u.id === editingUser.id ? { ...u, is_admin: values.is_admin } : u));
         message.success("Foydalanuvchi yangilandi");
       } else {
-        await api.post("/admin/users", { ...values, email: values.email || null, is_admin: values.is_admin || false });
-        message.success("Foydalanuvchi yaratildi");
-        fetchUsers();
+        message.info("Yangi foydalanuvchi ro'yxatdan o'tish sahifasi orqali qo'shiladi");
       }
       setIsModalOpen(false);
       form.resetFields();

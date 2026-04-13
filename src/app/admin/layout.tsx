@@ -42,7 +42,7 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user, token, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const [hydrated, setHydrated] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -63,13 +63,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    if (hydrated) api.setToken(token);
-  }, [hydrated, token]);
-
-  useEffect(() => {
     const fetchPendingApps = async () => {
       try {
-        const data = await api.get<any>("/admin/applications?status=pending");
+        const data = await api.getApplications("pending");
         setPendingApps(Array.isArray(data) ? data.length : 0);
       } catch {}
     };

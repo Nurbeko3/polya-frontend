@@ -9,9 +9,8 @@ import type { ColumnsType } from "antd/es/table";
 import {
   SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
   EyeOutlined, EyeInvisibleOutlined, UploadOutlined, ReloadOutlined, EnvironmentOutlined,
-  SendOutlined, CopyOutlined,
 } from "@ant-design/icons";
-import { API_URL, api } from "@/lib/api";
+import { api } from "@/lib/api";
 
 interface Field {
   id: number;
@@ -22,7 +21,7 @@ interface Field {
   price_per_hour: number;
   image_url: string | null;
   is_active: boolean;
-  phone_number?: string;
+  phone_number?: string | null;
   description?: string | null;
   owner_telegram_chat_id?: string | null;
 }
@@ -55,7 +54,7 @@ export default function AdminFieldsPage() {
   const fetchFields = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<any>("/admin/fields");
+      const data = await api.getAdminFields();
       setFields(data.fields || []);
     } catch {
       message.error("Maydonlarni yuklashda xatolik");
@@ -66,7 +65,7 @@ export default function AdminFieldsPage() {
 
   const handleToggleStatus = async (field: Field) => {
     try {
-      await api.put(`/fields/${field.id}`, { is_active: !field.is_active });
+      await api.updateField(field.id, { is_active: !field.is_active });
       setFields(fields.map((f) => f.id === field.id ? { ...f, is_active: !f.is_active } : f));
       message.success(field.is_active ? "Maydon o'chirildi" : "Maydon faollashtirildi");
     } catch {
@@ -76,7 +75,7 @@ export default function AdminFieldsPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await api.delete(`/fields/${id}`);
+      await api.deleteField(id);
       setFields(fields.filter((f) => f.id !== id));
       message.success("Maydon o'chirildi");
     } catch {
@@ -84,38 +83,6 @@ export default function AdminFieldsPage() {
     }
   };
 
-  const handleOwnerLink = async (fieldId: number, fieldName: string) => {
-    try {
-      const res = await api.get<{ deep_link: string; field_name: string }>(
-        `/admin/fields/${fieldId}/owner-link`
-      );
-      Modal.info({
-        title: `"${fieldName}" uchun Telegram link`,
-        content: (
-          <div>
-            <p style={{ marginBottom: 8, color: "#64748b", fontSize: 13 }}>
-              Ushbu linkni maydon egasiga yuboring. Ega linkni bosib botni ochadi va avtomatik ro'yxatdan o'tadi.
-            </p>
-            <div style={{
-              background: "#f1f5f9", borderRadius: 8, padding: "10px 12px",
-              fontFamily: "monospace", fontSize: 12, wordBreak: "break-all",
-              border: "1px solid #e2e8f0",
-            }}>
-              {res.deep_link}
-            </div>
-          </div>
-        ),
-        okText: "Nusxa olish",
-        onOk: () => {
-          navigator.clipboard.writeText(res.deep_link);
-          message.success("Link nusxalandi!");
-        },
-        width: 480,
-      });
-    } catch {
-      message.error("Link yaratishda xatolik");
-    }
-  };
 
   const handleEdit = (field: Field) => {
     setEditingField(field);
@@ -156,58 +123,21 @@ export default function AdminFieldsPage() {
       let imageUrl = editingField?.image_url || null;
 
       if (imageFile) {
-        const uploaded = await api.uploadFile<{ url: string }>(
-          `/fields/upload`,
-          imageFile,
-          "file"
-        );
-        imageUrl = uploaded.url;
+        imageUrl = await api.uploadFieldImage(imageFile);
       }
 
       const payload = { ...values, image_url: imageUrl };
 
       if (editingField) {
-        await api.put(`/admin/fields/${editingField.id}`, payload);
+        await api.updateField(editingField.id, payload);
         setFields(fields.map((f) => f.id === editingField.id ? { ...f, ...payload } : f));
         message.success("Maydon muvaffaqiyatli yangilandi");
         handleModalClose();
       } else {
-        const newField = await api.post<Field & { owner_telegram_link?: string }>("/fields/", payload);
+        const newField = await api.createField(payload);
         setFields([...fields, newField]);
+        message.success("Maydon muvaffaqiyatli yaratildi");
         handleModalClose();
-        // Telegram link modal
-        if (newField.owner_telegram_link) {
-          Modal.success({
-            title: "✅ Maydon yaratildi!",
-            width: 500,
-            content: (
-              <div>
-                <p style={{ color: "#64748b", marginBottom: 12 }}>
-                  Maydon egasiga quyidagi Telegram linkni yuboring. Ega linkni bosib botda ro'yxatdan o'tadi va bron xabarlarini oladi.
-                </p>
-                <div style={{
-                  background: "#f0f9ff",
-                  border: "1px solid #bae6fd",
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontFamily: "monospace",
-                  fontSize: 12,
-                  wordBreak: "break-all",
-                  color: "#0369a1",
-                }}>
-                  {newField.owner_telegram_link}
-                </div>
-              </div>
-            ),
-            okText: "📋 Nusxa olish",
-            onOk: () => {
-              navigator.clipboard.writeText(newField.owner_telegram_link!);
-              message.success("Link nusxalandi!");
-            },
-          });
-        } else {
-          message.success("Maydon muvaffaqiyatli yaratildi");
-        }
       }
     } catch (error: any) {
       message.error(error.message || "Xatolik yuz berdi");
@@ -244,7 +174,7 @@ export default function AdminFieldsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Avatar
               size={48} shape="square"
-              src={record.image_url ? `${record.image_url.startsWith("http") ? "" : API_URL.replace("/api/v1", "")}${record.image_url}` : undefined}
+              src={record.image_url || undefined}
               style={{ borderRadius: 10, background: cfg?.bg || "#f1f5f9", fontSize: 20, flexShrink: 0 }}
             >
               {cfg?.emoji || "🏟️"}
@@ -330,14 +260,6 @@ export default function AdminFieldsPage() {
                 background: record.is_active ? "#fffbeb" : "#f0fdf4",
                 borderRadius: 8, width: 32, height: 32,
               }}
-            />
-          </Tooltip>
-          <Tooltip title="Egaga Telegram link">
-            <Button
-              type="text" size="small"
-              icon={<SendOutlined />}
-              onClick={() => handleOwnerLink(record.id, record.name)}
-              style={{ color: "#0ea5e9", background: "#f0f9ff", borderRadius: 8, width: 32, height: 32 }}
             />
           </Tooltip>
           <Tooltip title="Tahrirlash">
@@ -490,7 +412,7 @@ export default function AdminFieldsPage() {
               overflow: "hidden", position: "relative", cursor: "pointer",
             }}>
               {imagePreview ? (
-                <img src={imagePreview.startsWith("http") || imagePreview.startsWith("data:") ? imagePreview : `${API_URL.replace("/api/v1", "")}${imagePreview}`}
+                <img src={imagePreview}
                   alt="preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />

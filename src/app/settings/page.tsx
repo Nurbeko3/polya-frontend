@@ -23,9 +23,9 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, isAuthenticated, logout, updateProfile, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
-     name: "",
-     phone: "",
-     password: "",
+    name: "",
+    phone: "",
+    password: "",
   });
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 

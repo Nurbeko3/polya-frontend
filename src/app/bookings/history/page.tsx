@@ -21,7 +21,6 @@ import {
   FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, ClockIcon as ClockSolid, XCircleIcon } from "@heroicons/react/24/solid";
-import { API_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const FIELD_ICONS: Record<string, string> = {
@@ -74,7 +73,7 @@ export default function BookingHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
-  const { user, isAuthenticated, token } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -88,20 +87,17 @@ export default function BookingHistoryPage() {
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      api.setToken(token);
       const data = await api.getMyBookings();
       const all = data.bookings.filter(
         (b) => b.status === "booked" || b.status === "pending" || b.status === "rejected"
       );
-      // Eng yangi bronlar tepada — ID bo'yicha kamayish tartibida
       all.sort((a, b) => b.id - a.id);
 
       const withFields = await Promise.all(
         all.map(async (booking) => {
           try {
-            const res = await fetch(`${API_URL}/fields/${booking.field_id}`);
-            if (res.ok) return { ...booking, field: await res.json() };
-            return booking;
+            const field = await api.getField(booking.field_id);
+            return { ...booking, field };
           } catch {
             return booking;
           }
@@ -119,7 +115,6 @@ export default function BookingHistoryPage() {
     if (!window.confirm("Bronni bekor qilishni tasdiqlaysizmi?")) return;
     setCancellingId(slotId);
     try {
-      api.setToken(token);
       await api.cancelBooking(slotId);
       setBookings((prev) => prev.filter((b) => b.id !== slotId));
       toast.success("Bron muvaffaqiyatli bekor qilindi");

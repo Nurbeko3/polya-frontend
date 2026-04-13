@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import dynamic from "next/dynamic";
-import { API_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 
 // The actual map logic stays in a client-side only component
 const MapInstance = dynamic(() => import("@/components/map/map-instance"), { 
@@ -25,8 +25,7 @@ export default function MapPage() {
 
   useEffect(() => {
     // Fetch fields
-    fetch(`${API_URL}/fields/`)
-      .then(res => res.json())
+    api.getFields()
       .then(data => setFields(data.fields || []))
       .catch(err => console.error("Error fetching fields:", err));
   }, []);
