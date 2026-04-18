@@ -228,7 +228,7 @@ export default function AdminDashboard() {
   const greeting = "Xayrli kun";
 
   return (
-    <Space orientation="vertical" size={20} style={{ width: "100%", display: "flex" }}>
+    <Space direction="vertical" size={20} style={{ width: "100%", display: "flex" }}>
       {/* Welcome Banner */}
       <div style={{
         background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
@@ -378,7 +378,7 @@ export default function AdminDashboard() {
 
         {/* Quick Stats & Links */}
         <Col xs={24} lg={10}>
-          <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+          <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
             {/* Revenue breakdown */}
             <Card
               style={{ borderRadius: 16, border: "1px solid #e2e8f0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
                 </Button>
               }
             >
-              <Space orientation="vertical" style={{ width: "100%" }} size={16}>
+              <Space direction="vertical" style={{ width: "100%" }} size={16}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <Text style={{ fontSize: 13, color: "#64748b" }}>Bu oylik daromad</Text>
@@ -456,7 +456,7 @@ export default function AdminDashboard() {
               styles={{ body: { padding: 16 } }}
               title={<span style={{ fontWeight: 700, color: "#0f172a" }}>Tezkor havolalar</span>}
             >
-              <Space orientation="vertical" style={{ width: "100%" }} size={8}>
+              <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 {[
                   { href: "/admin/fields", label: "Maydonlar boshqaruvi", icon: <EnvironmentOutlined />, color: "#10b981", bg: "#f0fdf4" },
                   { href: "/admin/bookings", label: "Bronlar registri", icon: <CalendarOutlined />, color: "#6366f1", bg: "#f5f3ff" },

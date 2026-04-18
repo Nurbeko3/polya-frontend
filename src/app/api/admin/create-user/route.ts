@@ -11,14 +11,24 @@ export async function POST(req: NextRequest) {
   const { name, phone, password, is_admin } = await req.json();
 
   if (!name || !phone || !password) {
-    return NextResponse.json({ error: "name, phone va password majburiy" }, { status: 400 });
+    return NextResponse.json({ error: "Ism, telefon va parol majburiy" }, { status: 400 });
   }
 
-  // Telefon raqamni email formatiga o'tkazish (loyiha standarti)
   const digits = phone.replace(/\D/g, "");
   const email = `${digits}@polya.app`;
 
-  // 1. Auth da foydalanuvchi yaratish
+  // 1. Telefon raqam allaqachon mavjudmi?
+  const { data: existing } = await svc
+    .from("profiles")
+    .select("id")
+    .eq("phone", digits)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ error: "Bu telefon raqam allaqachon ro'yxatda bor" }, { status: 409 });
+  }
+
+  // 2. Auth da foydalanuvchi yaratish (trigger profiles ga ham yozadi)
   const { data: authData, error: authErr } = await svc.auth.admin.createUser({
     email,
     password,
@@ -32,20 +42,9 @@ export async function POST(req: NextRequest) {
 
   const user_id = authData.user.id;
 
-  // 2. profiles jadvalida yozuv yaratish
-  const { error: profErr } = await svc.from("profiles").upsert({
-    id: user_id,
-    name,
-    phone: digits,
-    email,
-    is_active: true,
-    is_admin: is_admin ?? false,
-  });
-
-  if (profErr) {
-    // Auth yaratildi lekin profile xato — auth ni ham o'chiramiz
-    await svc.auth.admin.deleteUser(user_id);
-    return NextResponse.json({ error: "profile: " + profErr.message }, { status: 500 });
+  // 3. is_admin ni yangilash (trigger faqat false qo'yadi)
+  if (is_admin) {
+    await svc.from("profiles").update({ is_admin: true }).eq("id", user_id);
   }
 
   return NextResponse.json({ ok: true, user_id });

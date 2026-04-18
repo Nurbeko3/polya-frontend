@@ -316,7 +316,7 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #f59e0b, #d97706)",

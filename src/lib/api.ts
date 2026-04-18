@@ -404,7 +404,19 @@ class ApiClient {
 
   async getStats(): Promise<any> {
     try {
-      return await this.getAdminStats();
+      const [fieldsRes, usersRes, bookingsRes, citiesRes] = await Promise.all([
+        supabase.from("fields").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("booking_slots").select("id", { count: "exact", head: true }).in("status", ["pending", "booked"]),
+        supabase.from("fields").select("city").eq("is_active", true),
+      ]);
+      const cities = new Set((citiesRes.data || []).map((f: any) => f.city)).size;
+      return {
+        active_fields: fieldsRes.count || 0,
+        users: usersRes.count || 0,
+        bookings: bookingsRes.count || 0,
+        cities,
+      };
     } catch {
       return { active_fields: 0, cities: 0, bookings: 0, users: 0 };
     }

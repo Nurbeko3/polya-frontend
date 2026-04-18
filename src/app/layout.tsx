@@ -3,8 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "sonner";
-import { ConfigProvider } from "antd";
 import { AntdRegistry } from "@/components/antd-registry";
+import { DynamicConfigProvider } from "@/components/dynamic-config-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,20 +22,12 @@ export default function RootLayout({
     <html lang="uz" suppressHydrationWarning>
       <body className={inter.className}>
         <AntdRegistry>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: "#2563eb",
-                borderRadius: 8,
-                fontFamily: inter.style.fontFamily,
-              },
-            }}
-          >
-            <ThemeProvider defaultTheme="light" storageKey="polya-theme">
+          <ThemeProvider defaultTheme="light" storageKey="polya-theme">
+            <DynamicConfigProvider>
               {children}
               <Toaster position="top-right" richColors closeButton />
-            </ThemeProvider>
-          </ConfigProvider>
+            </DynamicConfigProvider>
+          </ThemeProvider>
         </AntdRegistry>
       </body>
     </html>

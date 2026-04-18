@@ -402,7 +402,10 @@ export function Navbar() {
       </header>
 
       {/* ── Mobile Top Bar ── */}
-      <header className="fixed top-0 left-0 right-0 z-[100] md:hidden flex items-center justify-between px-4 h-16">
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-[100] md:hidden flex items-center justify-between px-4 h-16 border-b backdrop-blur-xl",
+        g.bg, g.border
+      )}>
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md">
             <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg">

@@ -47,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [pendingApps, setPendingApps] = useState(0);
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -121,6 +122,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+            zIndex: 49, display: "block",
+          }}
+          className="md:hidden"
+        />
+      )}
+
       {/* Sidebar */}
       <Sider
         trigger={null}
@@ -137,19 +150,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           zIndex: 50,
           overflow: "hidden",
           boxShadow: "2px 0 20px rgba(0,0,0,0.3)",
+          transform: mobileOpen ? "translateX(0)" : undefined,
+          transition: "transform 0.25s ease",
         }}
+        className={!mobileOpen ? "max-md:!-translate-x-full" : ""}
       >
         {/* Logo */}
         <div style={{
           height: 64,
           display: "flex",
           alignItems: "center",
-          justifyContent: collapsed ? "center" : "flex-start",
-          padding: collapsed ? "0" : "0 20px",
+          justifyContent: collapsed ? "center" : "space-between",
+          padding: collapsed ? "0 16px" : "0 20px",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           flexShrink: 0,
         }}>
-          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Link href="/admin" onClick={() => setMobileOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <div style={{
               width: 36,
               height: 36,
@@ -267,7 +283,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </Sider>
 
-      <Layout style={{ marginLeft: collapsed ? 72 : 240, transition: "margin-left 0.2s" }}>
+      <Layout style={{ marginLeft: collapsed ? 72 : 240, transition: "margin-left 0.2s" }} className="max-md:!ml-0">
         {/* Header */}
         <Header style={{
           background: isDark ? "#0f172a" : "#fff",
@@ -285,11 +301,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           overflow: "visible",
         }}>
           <Space size="middle">
+            {/* Desktop toggle */}
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
               style={{ fontSize: 16, color: isDark ? "#94a3b8" : "#64748b" }}
+              className="max-md:!hidden"
+            />
+            {/* Mobile toggle */}
+            <Button
+              type="text"
+              icon={<MenuUnfoldOutlined />}
+              onClick={() => setMobileOpen(true)}
+              style={{ fontSize: 16, color: isDark ? "#94a3b8" : "#64748b" }}
+              className="md:!hidden"
             />
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: isDark ? "#f1f5f9" : "#0f172a", lineHeight: 1.3 }}>

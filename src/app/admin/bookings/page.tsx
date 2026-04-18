@@ -265,7 +265,7 @@ export default function AdminBookingsPage() {
   ];
 
   return (
-    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #6366f1, #4f46e5)",

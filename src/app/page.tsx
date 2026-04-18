@@ -396,7 +396,7 @@ export default function HomePage() {
               <Title level={5} className="!mb-3" style={{ color: colors.textPrimary }}>
                 Havolalar
               </Title>
-              <Space orientation="vertical" size={8} className="w-full">
+              <Space direction="vertical" size={8} className="w-full">
                 <a href="#" style={{ color: colors.textSecondary, fontSize: 14 }}>Bosh sahifa</a>
                 <a href="#fields" style={{ color: colors.textSecondary, fontSize: 14 }}>Maydonlar</a>
                 <Link href="/bookings" style={{ color: colors.textSecondary, fontSize: 14 }}>Bronlarim</Link>
@@ -406,7 +406,7 @@ export default function HomePage() {
               <Title level={5} className="!mb-3" style={{ color: colors.textPrimary }}>
                 Aloqa
               </Title>
-              <Space orientation="vertical" size={8} className="w-full">
+              <Space direction="vertical" size={8} className="w-full">
                 <Text style={{ color: colors.textSecondary, fontSize: 14 }}>+998 71 123 45 67</Text>
                 <Text style={{ color: colors.textSecondary, fontSize: 14 }}>info@polya.uz</Text>
                 <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Toshkent, O'zbekiston</Text>

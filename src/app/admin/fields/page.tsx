@@ -310,7 +310,7 @@ export default function AdminFieldsPage() {
   ];
 
   return (
-    <Space orientation="vertical" size={16} style={{ width: "100%", display: "flex" }}>
+    <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #10b981, #059669)",
