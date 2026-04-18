@@ -10,7 +10,14 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Polya - Maydon bron qilish",
-  description: "O'zbekistondagi futbol va tennis maydonlarini bron qilish platformasi",
+  description: "O'zbekistondagi futbol, tennis, basketbol va voleybol maydonlarini tez va oson bron qilish platformasi",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon.svg",
+  },
 };
 
 export default function RootLayout({
