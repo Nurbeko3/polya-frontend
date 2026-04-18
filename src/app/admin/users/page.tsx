@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "@/store/auth-store";
 import { api } from "@/lib/api";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -48,6 +49,7 @@ export default function AdminUsersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form] = Form.useForm();
   const { user: currentUser } = useAuthStore();
+  const isMobile = useIsMobile();
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -320,27 +322,29 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #f59e0b, #d97706)",
-        borderRadius: 16, padding: "24px 28px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderRadius: 16, padding: isMobile ? "16px" : "24px 28px",
+        display: "flex", flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "flex-start" : "center",
+        justifyContent: "space-between", gap: 12,
         boxShadow: "0 4px 20px rgba(245,158,11,0.25)",
       }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Foydalanuvchilar</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Foydalanuvchilar</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
             Jami {users.length} ta · {counts.admin} admin · {counts.active} faol
           </div>
         </div>
-        <Space>
+        <Space wrap>
           <Button
             icon={<ReloadOutlined />}
             onClick={fetchUsers}
             loading={isLoading}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           />
           <Button
-            type="primary" icon={<PlusOutlined />} size="large"
+            type="primary" icon={<PlusOutlined />}
             onClick={handleOpenCreate}
-            style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", borderRadius: 10, fontWeight: 600, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", borderRadius: 10, fontWeight: 600 }}
           >
             Yangi foydalanuvchi
           </Button>
@@ -395,12 +399,13 @@ export default function AdminUsersPage() {
           dataSource={filteredUsers}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 600 }}
           style={{ borderRadius: 14, overflow: "hidden" }}
           pagination={{
             pageSize: 12,
-            showSizeChanger: true,
-            showTotal: (total) => `Jami ${total} ta foydalanuvchi`,
-            style: { padding: "12px 20px" },
+            showSizeChanger: !isMobile,
+            showTotal: (total) => `Jami ${total} ta`,
+            style: { padding: "12px 16px" },
           }}
         />
       </Card>

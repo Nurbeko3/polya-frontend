@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, Row, Col, Skeleton, Typography, Space, Tag, Button, Progress, Empty, Avatar, Modal, message } from "antd";
 import {
   EnvironmentOutlined,
@@ -140,6 +141,7 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const { user } = useAuthStore();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchData();
@@ -232,53 +234,43 @@ export default function AdminDashboard() {
       {/* Welcome Banner */}
       <div style={{
         background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
-        borderRadius: 20,
-        padding: "28px 32px",
+        borderRadius: 16,
+        padding: isMobile ? "20px 20px" : "28px 32px",
         display: "flex",
-        alignItems: "center",
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "space-between",
+        gap: 16,
         boxShadow: "0 8px 30px rgba(15,23,42,0.2)",
         overflow: "hidden",
         position: "relative",
       }}>
         <div style={{ position: "absolute", right: -40, top: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(99,102,241,0.15)" }} />
-        <div style={{ position: "absolute", right: 80, bottom: -60, width: 150, height: 150, borderRadius: "50%", background: "rgba(99,102,241,0.1)" }} />
         <div style={{ position: "relative" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
             {greeting}{user?.name ? `, ${user.name}` : ""} 👋
           </div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.65)" }}>
-            Polya Admin Paneliga xush kelibsiz. Platformaning umumiy holati quyida.
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+            Polya Admin Paneliga xush kelibsiz.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 12, position: "relative" }}>
+        <div style={{ display: "flex", gap: 10, position: "relative", flexWrap: "wrap" }}>
           {applications.length > 0 && (
             <Link href="/admin/applications">
               <Button
                 type="primary"
-                style={{
-                  background: "rgba(239,68,68,0.9)",
-                  border: "none",
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  height: 40,
-                }}
+                size={isMobile ? "middle" : "large"}
+                style={{ background: "rgba(239,68,68,0.9)", border: "none", borderRadius: 10, fontWeight: 600 }}
                 icon={<FileTextOutlined />}
               >
-                {applications.length} ta yangi ariza
+                {applications.length} ariza
               </Button>
             </Link>
           )}
           <Link href="/admin/fields">
             <Button
-              style={{
-                background: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                color: "#fff",
-                borderRadius: 10,
-                fontWeight: 600,
-                height: 40,
-              }}
+              size={isMobile ? "middle" : "large"}
+              style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: 10, fontWeight: 600 }}
               icon={<EnvironmentOutlined />}
             >
               Maydonlar

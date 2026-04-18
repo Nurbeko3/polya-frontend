@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Table, Card, Input, Tag, Space, Typography, Row, Col, Button, Avatar, Statistic, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -143,6 +144,7 @@ export default function AdminBookingsPage() {
     rejected: bookings.filter((b) => b.status === "rejected").length,
   };
 
+  const isMobile = useIsMobile();
   const busy = isLoading || isClearing;
   const filterButtons = [
     { key: "all",      label: "Barchasi",    count: counts.all,      color: "#6366f1", bg: "#f5f3ff" },
@@ -269,22 +271,22 @@ export default function AdminBookingsPage() {
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-        borderRadius: 16, padding: "24px 28px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderRadius: 16, padding: isMobile ? "16px" : "24px 28px",
+        display: "flex", flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "flex-start" : "center",
+        justifyContent: "space-between", gap: 12,
         boxShadow: "0 4px 20px rgba(99,102,241,0.25)",
       }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Bronlar Registri</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
-            Barcha mavjud bronlar va to'lov holati
-          </div>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Bronlar Registri</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Barcha bronlar va to'lov holati</div>
         </div>
-        <Space>
+        <Space wrap>
           <Button
             icon={<DeleteOutlined />}
             onClick={handleClearOld}
             loading={isClearing}
-            style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.4)", color: "#fca5a5", borderRadius: 10 }}
           >
             Tozalash
           </Button>
@@ -292,7 +294,7 @@ export default function AdminBookingsPage() {
             icon={<ReloadOutlined />}
             onClick={fetchBookings}
             loading={isLoading}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           >
             Yangilash
           </Button>
@@ -390,12 +392,13 @@ export default function AdminBookingsPage() {
           dataSource={filteredBookings}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 700 }}
           style={{ borderRadius: 14, overflow: "hidden" }}
           pagination={{
             pageSize: 15,
-            showSizeChanger: true,
-            showTotal: (total) => `Jami ${total} ta bron`,
-            style: { padding: "12px 20px" },
+            showSizeChanger: !isMobile,
+            showTotal: (total) => `Jami ${total} ta`,
+            style: { padding: "12px 16px" },
           }}
           rowClassName={() => "booking-row"}
         />

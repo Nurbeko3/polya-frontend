@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table, Card, Button, Input, Tag, Space, message, Modal, Form,
   Select, InputNumber, Typography, Row, Col, Popconfirm, Avatar, Tooltip, Switch, Upload,
@@ -51,6 +52,7 @@ export default function AdminFieldsPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [fieldTelegramLink, setFieldTelegramLink] = useState<{ link: string; field_name: string } | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchFields();
@@ -314,29 +316,29 @@ export default function AdminFieldsPage() {
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #10b981, #059669)",
-        borderRadius: 16, padding: "24px 28px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderRadius: 16, padding: isMobile ? "16px" : "24px 28px",
+        display: "flex", flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "flex-start" : "center",
+        justifyContent: "space-between", gap: 12,
         boxShadow: "0 4px 20px rgba(16,185,129,0.25)",
       }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Maydonlar Boshqaruvi</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Maydonlar Boshqaruvi</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
             Jami {fields.length} ta · {activeCount} aktiv · {inactiveCount} noaktiv
           </div>
         </div>
-        <Space>
+        <Space wrap>
           <Button
             icon={<ReloadOutlined />}
             onClick={fetchFields}
             loading={isLoading}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           />
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
+            type="primary" icon={<PlusOutlined />}
             onClick={handleOpenCreate}
-            style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", borderRadius: 10, fontWeight: 600, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", borderRadius: 10, fontWeight: 600 }}
           >
             Yangi Maydon
           </Button>
@@ -382,12 +384,13 @@ export default function AdminFieldsPage() {
           dataSource={filteredFields}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 700 }}
           style={{ borderRadius: 14, overflow: "hidden" }}
           pagination={{
             pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Jami ${total} ta maydon`,
-            style: { padding: "12px 20px" },
+            showSizeChanger: !isMobile,
+            showTotal: (total) => `Jami ${total} ta`,
+            style: { padding: "12px 16px" },
           }}
         />
       </Card>

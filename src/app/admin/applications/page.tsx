@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Card, Button, Input, Tag, Space, Typography, Row, Col, Table, Avatar,
   message, Modal, Descriptions, Tooltip, Badge,
@@ -55,6 +56,7 @@ export default function AdminApplicationsPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [detailApp, setDetailApp] = useState<Application | null>(null);
   const [telegramLink, setTelegramLink] = useState<{ link: string; field_name: string } | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => { fetchApplications(); }, [filterStatus]);
 
@@ -260,26 +262,28 @@ export default function AdminApplicationsPage() {
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-        borderRadius: 16, padding: "24px 28px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderRadius: 16, padding: isMobile ? "16px" : "24px 28px",
+        display: "flex", flexDirection: isMobile ? "column" : "row",
+        alignItems: isMobile ? "flex-start" : "center",
+        justifyContent: "space-between", gap: 12,
         boxShadow: "0 4px 20px rgba(245,158,11,0.3)",
       }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Maydon Arizalari</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
-            Maydon egalaridan kelgan arizalarni ko'rib chiqing
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Maydon Arizalari</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
+            Maydon egalaridan kelgan arizalar
           </div>
         </div>
-        <Space>
+        <Space wrap>
           <Button
             icon={<ReloadOutlined />} onClick={fetchApplications} loading={isLoading}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           />
           <Button
             danger icon={<DeleteOutlined />} onClick={showClearConfirm}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 10, height: 40 }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 10 }}
           >
-            Arxivni tozalash
+            Tozalash
           </Button>
         </Space>
       </div>
@@ -328,12 +332,13 @@ export default function AdminApplicationsPage() {
           dataSource={filteredApplications}
           rowKey="id"
           loading={isLoading}
+          scroll={{ x: 650 }}
           style={{ borderRadius: 14, overflow: "hidden" }}
           pagination={{
             pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Jami ${total} ta ariza`,
-            style: { padding: "12px 20px" },
+            showSizeChanger: !isMobile,
+            showTotal: (total) => `Jami ${total} ta`,
+            style: { padding: "12px 16px" },
           }}
         />
       </Card>

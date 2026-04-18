@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
@@ -48,6 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [pendingApps, setPendingApps] = useState(0);
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -369,7 +371,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Header>
 
         {/* Content */}
-        <Content style={{ padding: 24, background: isDark ? "#0c1220" : "#f1f5f9", minHeight: "calc(100vh - 64px)" }}>
+        <Content style={{ padding: isMobile ? 12 : 24, background: isDark ? "#0c1220" : "#f1f5f9", minHeight: "calc(100vh - 64px)" }}>
           {children}
         </Content>
       </Layout>
