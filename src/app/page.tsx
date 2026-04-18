@@ -28,8 +28,8 @@ export default function HomePage() {
 
   const fetchStats = async () => {
     try {
-      const data = await api.getStats();
-      setStats(data);
+      const res = await fetch("/api/stats");
+      if (res.ok) setStats(await res.json());
     } catch (error) {
       console.error("Error fetching stats:", error);
     }

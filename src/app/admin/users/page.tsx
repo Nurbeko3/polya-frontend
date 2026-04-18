@@ -81,8 +81,8 @@ export default function AdminUsersPage() {
         const err = await res.json();
         throw new Error(err.error || "Xatolik");
       }
-      setUsers(users.map((u) => u.id === id ? { ...u, is_active: newStatus } : u));
       message.success(newStatus ? "Foydalanuvchi faollashtirildi" : "Foydalanuvchi bloklandi");
+      await fetchUsers();
     } catch (e: any) {
       message.error(e.message || "Xatolik yuz berdi");
     }
@@ -119,10 +119,11 @@ export default function AdminUsersPage() {
             const err = await res.json();
             throw new Error(err.error || "Xatolik");
           }
-          setUsers(users.filter((u) => u.id !== id));
           message.success("Foydalanuvchi o'chirildi");
+          await fetchUsers();
         } catch (e: any) {
           message.error(e.message || "O'chirishda xatolik");
+          await fetchUsers();
         }
       },
     });
