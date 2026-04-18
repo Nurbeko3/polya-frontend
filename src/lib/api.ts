@@ -300,10 +300,10 @@ class ApiClient {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Tizimga kirish kerak");
 
-    // Slotni tekshiramiz
+    // Slotni tekshiramiz (maydon egasi ma'lumotlari ham kerak)
     const { data: slot, error: slotErr } = await supabase
       .from("booking_slots")
-      .select("*, fields(price_per_hour)")
+      .select("*, fields(price_per_hour, name, owner_telegram_chat_id)")
       .eq("id", slotId)
       .eq("lock_token", lockToken)
       .eq("user_id", user.id)
@@ -334,6 +334,34 @@ class ApiClient {
       .single();
 
     if (payErr) throw new Error(payErr.message);
+
+    // Mijoz profilini olamiz
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name, phone")
+      .eq("id", user.id)
+      .single();
+
+    // Maydon egasiga Telegram xabar yuboramiz (xato bo'lsa ignore)
+    const ownerChatId = slot.fields?.owner_telegram_chat_id;
+    if (ownerChatId) {
+      fetch("/api/notify-owner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          owner_chat_id: ownerChatId,
+          slot_id: slotId,
+          field_name: slot.fields?.name || "",
+          date: slot.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          amount,
+          payment_method: paymentMethod,
+          user_name: profile?.name || "Noma'lum",
+          user_phone: profile?.phone || "",
+        }),
+      }).catch(() => {}); // Xabar yuborilmasa ham bron muvaffaqiyatli
+    }
 
     return {
       booking_id: slotId,
@@ -375,23 +403,43 @@ class ApiClient {
   // ── Stats ────────────────────────────────────────────────────────────────
 
   async getStats(): Promise<any> {
-    const { data, error } = await supabase.from("admin_stats").select("*").single();
-    if (error) return { active_fields: 0, cities: 0, bookings: 0, users: 0 };
-    return data;
+    try {
+      return await this.getAdminStats();
+    } catch {
+      return { active_fields: 0, cities: 0, bookings: 0, users: 0 };
+    }
   }
 
   async getAdminStats(): Promise<any> {
-    const { data, error } = await supabase.from("admin_stats").select("*").single();
-    if (error) throw new Error(error.message);
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split("T")[0];
+
+    const [fieldsRes, usersRes, bookingsRes, monthlyBookRes, allPayRes, monthlyPayRes, prevPayRes, appsRes] =
+      await Promise.all([
+        supabase.from("fields").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        supabase.from("booking_slots").select("id", { count: "exact", head: true }).in("status", ["pending", "booked", "rejected"]),
+        supabase.from("booking_slots").select("id", { count: "exact", head: true }).in("status", ["pending", "booked"]).gte("date", thisMonthStart),
+        supabase.from("payments").select("amount").eq("status", "completed"),
+        supabase.from("payments").select("amount").eq("status", "completed").gte("created_at", `${thisMonthStart}T00:00:00`),
+        supabase.from("payments").select("amount").eq("status", "completed").gte("created_at", `${prevMonthStart}T00:00:00`).lt("created_at", `${thisMonthStart}T00:00:00`),
+        supabase.from("field_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+
+    const totalRevenue = (allPayRes.data || []).reduce((s, p) => s + (p.amount || 0), 0);
+    const monthlyRevenue = (monthlyPayRes.data || []).reduce((s, p) => s + (p.amount || 0), 0);
+    const prevMonthRevenue = (prevPayRes.data || []).reduce((s, p) => s + (p.amount || 0), 0);
+
     return {
-      total_fields: data.active_fields,
-      total_users: data.users,
-      total_bookings: data.total_bookings,
-      pending_applications: data.pending_applications,
-      total_revenue: data.total_revenue,
-      monthly_revenue: data.monthly_revenue,
-      prev_month_revenue: data.prev_month_revenue,
-      monthly_bookings: data.monthly_bookings,
+      total_fields: fieldsRes.count || 0,
+      total_users: usersRes.count || 0,
+      total_bookings: bookingsRes.count || 0,
+      pending_applications: appsRes.count || 0,
+      total_revenue: totalRevenue,
+      monthly_revenue: monthlyRevenue,
+      prev_month_revenue: prevMonthRevenue,
+      monthly_bookings: monthlyBookRes.count || 0,
     };
   }
 
@@ -400,7 +448,7 @@ class ApiClient {
   async getAdminBookings(): Promise<any[]> {
     const { data, error } = await supabase
       .from("booking_slots")
-      .select("*, fields(name, city), profiles(name, phone)")
+      .select("*, fields(name, city, price_per_hour), profiles(name, phone), payments(amount, status, payment_method)")
       .in("status", ["pending", "booked", "rejected"])
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -460,7 +508,7 @@ class ApiClient {
     return data;
   }
 
-  async approveApplication(id: number): Promise<void> {
+  async approveApplication(id: number): Promise<{ field_id: number; owner_invite_token: string; field_name: string }> {
     // Arizani olish
     const { data: app, error: appErr } = await supabase
       .from("field_applications")
@@ -469,20 +517,30 @@ class ApiClient {
       .single();
     if (appErr) throw new Error(appErr.message);
 
-    // Maydon yaratish
-    const { error: fieldErr } = await supabase.from("fields").insert({
-      name: app.field_name,
-      field_type: app.field_type,
-      address: app.address,
-      city: app.city,
-      price_per_hour: app.price_per_hour,
-      phone_number: app.phone_number,
-      description: app.description,
-      image_url: app.image_url,
-      latitude: app.latitude,
-      longitude: app.longitude,
-      is_active: true,
-    });
+    // Noyob owner_invite_token yaratamiz
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(24)))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Maydon yaratish — token bilan
+    const { data: newField, error: fieldErr } = await supabase
+      .from("fields")
+      .insert({
+        name: app.field_name,
+        field_type: app.field_type,
+        address: app.address,
+        city: app.city,
+        price_per_hour: app.price_per_hour,
+        phone_number: app.phone_number,
+        description: app.description,
+        image_url: app.image_url,
+        latitude: app.latitude,
+        longitude: app.longitude,
+        is_active: true,
+        owner_invite_token: token,
+      })
+      .select("id, name, owner_invite_token")
+      .single();
     if (fieldErr) throw new Error(fieldErr.message);
 
     // Arizani tasdiqlash
@@ -491,6 +549,12 @@ class ApiClient {
       .update({ status: "approved" })
       .eq("id", id);
     if (error) throw new Error(error.message);
+
+    return {
+      field_id: newField.id,
+      owner_invite_token: newField.owner_invite_token,
+      field_name: newField.name,
+    };
   }
 
   async rejectApplication(id: number): Promise<void> {

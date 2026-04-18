@@ -54,7 +54,9 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getAdminUsers();
+      const res = await fetch("/api/admin/users");
+      if (!res.ok) throw new Error("Server xatolik");
+      const data = await res.json();
       setUsers(Array.isArray(data) ? data : []);
     } catch {
       message.error("Foydalanuvchilarni yuklashda xatolik");
@@ -64,7 +66,24 @@ export default function AdminUsersPage() {
   };
 
   const handleToggleStatus = async (id: string) => {
-    message.info("Bu funksiya Supabase Auth orqali boshqariladi");
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
+    const newStatus = !target.is_active;
+    try {
+      const res = await fetch("/api/admin/toggle-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: id, is_active: newStatus }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Xatolik");
+      }
+      setUsers(users.map((u) => u.id === id ? { ...u, is_active: newStatus } : u));
+      message.success(newStatus ? "Foydalanuvchi faollashtirildi" : "Foydalanuvchi bloklandi");
+    } catch (e: any) {
+      message.error(e.message || "Xatolik yuz berdi");
+    }
   };
 
   const handleEdit = (user: User) => {
@@ -81,7 +100,30 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    message.info("Foydalanuvchi o'chirish Supabase Dashboard orqali amalga oshiriladi");
+    Modal.confirm({
+      title: "Foydalanuvchini o'chirish",
+      content: "Bu foydalanuvchi va uning barcha ma'lumotlari butunlay o'chiriladi. Davom etasizmi?",
+      okText: "Ha, o'chirish",
+      cancelText: "Bekor",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          const res = await fetch("/api/admin/delete-user", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: id }),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "Xatolik");
+          }
+          setUsers(users.filter((u) => u.id !== id));
+          message.success("Foydalanuvchi o'chirildi");
+        } catch (e: any) {
+          message.error(e.message || "O'chirishda xatolik");
+        }
+      },
+    });
   };
 
   const handleSubmit = async (values: any) => {
@@ -92,7 +134,22 @@ export default function AdminUsersPage() {
         setUsers(users.map((u) => u.id === editingUser.id ? { ...u, is_admin: values.is_admin } : u));
         message.success("Foydalanuvchi yangilandi");
       } else {
-        message.info("Yangi foydalanuvchi ro'yxatdan o'tish sahifasi orqali qo'shiladi");
+        const res = await fetch("/api/admin/create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: values.name,
+            phone: values.phone,
+            password: values.password,
+            is_admin: values.is_admin || false,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Yaratishda xatolik");
+        }
+        message.success("Foydalanuvchi muvaffaqiyatli qo'shildi");
+        await fetchUsers();
       }
       setIsModalOpen(false);
       form.resetFields();

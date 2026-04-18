@@ -39,9 +39,11 @@ interface Booking {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  booked: { label: "Tasdiqlangan", color: "#059669", bg: "#f0fdf4", icon: <CheckCircleOutlined /> },
-  locked: { label: "Vaqtincha", color: "#d97706", bg: "#fffbeb", icon: <ClockCircleOutlined /> },
-  cancelled: { label: "Bekor", color: "#dc2626", bg: "#fef2f2", icon: <CloseCircleOutlined /> },
+  booked:    { label: "Tasdiqlangan",  color: "#059669", bg: "#f0fdf4", icon: <CheckCircleOutlined /> },
+  pending:   { label: "Kutilmoqda",    color: "#d97706", bg: "#fffbeb", icon: <ClockCircleOutlined /> },
+  locked:    { label: "Vaqtincha",     color: "#f59e0b", bg: "#fefce8", icon: <ClockCircleOutlined /> },
+  rejected:  { label: "Rad etilgan",   color: "#dc2626", bg: "#fef2f2", icon: <CloseCircleOutlined /> },
+  cancelled: { label: "Bekor qilingan",color: "#64748b", bg: "#f8fafc", icon: <CloseCircleOutlined /> },
 };
 
 const paymentConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -88,21 +90,30 @@ export default function AdminBookingsPage() {
     try {
       const data = await api.getAdminBookings();
       // Supabase join ma'lumotlarini flat qilamiz
-      const flat = data.map((b: any) => ({
-        id: b.id,
-        field_name: b.fields?.name || `Maydon #${b.field_id}`,
-        field_id: b.field_id,
-        user_name: b.profiles?.name || "Noma'lum",
-        user_phone: b.profiles?.phone || "",
-        booking_date: b.date,
-        start_time: b.start_time,
-        end_time: b.end_time,
-        total_price: 0,
-        status: b.status,
-        payment_status: "pending",
-        payment_method: null,
-        created_at: b.created_at,
-      }));
+      // payments array yoki object bo'lishi mumkin
+      const getPayment = (b: any) => {
+        const p = b.payments;
+        if (!p) return null;
+        return Array.isArray(p) ? p[0] : p;
+      };
+      const flat = data.map((b: any) => {
+        const pay = getPayment(b);
+        return {
+          id: b.id,
+          field_name: b.fields?.name || `Maydon #${b.field_id}`,
+          field_id: b.field_id,
+          user_name: b.profiles?.name || "Noma'lum",
+          user_phone: b.profiles?.phone || "",
+          booking_date: b.date,
+          start_time: b.start_time,
+          end_time: b.end_time,
+          total_price: pay?.amount || b.fields?.price_per_hour || 0,
+          status: b.status,
+          payment_status: pay?.status || "pending",
+          payment_method: pay?.payment_method || null,
+          created_at: b.created_at,
+        };
+      });
       setBookings(flat);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -126,16 +137,18 @@ export default function AdminBookingsPage() {
     .reduce((sum, b) => sum + b.total_price, 0);
 
   const counts = {
-    all: bookings.length,
-    booked: bookings.filter((b) => b.status === "booked").length,
-    locked: bookings.filter((b) => b.status === "locked").length,
+    all:      bookings.length,
+    booked:   bookings.filter((b) => b.status === "booked").length,
+    pending:  bookings.filter((b) => b.status === "pending").length,
+    rejected: bookings.filter((b) => b.status === "rejected").length,
   };
 
   const busy = isLoading || isClearing;
   const filterButtons = [
-    { key: "all", label: `Barchasi`, count: counts.all, color: "#6366f1", bg: "#f5f3ff" },
-    { key: "booked", label: "Tasdiqlangan", count: counts.booked, color: "#059669", bg: "#f0fdf4" },
-    { key: "locked", label: "Vaqtincha", count: counts.locked, color: "#d97706", bg: "#fffbeb" },
+    { key: "all",      label: "Barchasi",    count: counts.all,      color: "#6366f1", bg: "#f5f3ff" },
+    { key: "pending",  label: "Kutilmoqda",  count: counts.pending,  color: "#d97706", bg: "#fffbeb" },
+    { key: "booked",   label: "Tasdiqlangan",count: counts.booked,   color: "#059669", bg: "#f0fdf4" },
+    { key: "rejected", label: "Rad etilgan", count: counts.rejected, color: "#dc2626", bg: "#fef2f2" },
   ];
 
   const columns: ColumnsType<Booking> = [
@@ -305,8 +318,8 @@ export default function AdminBookingsPage() {
             </Col>
             <Col xs={12} sm={6}>
               <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0", textAlign: "center" }} styles={{ body: { padding: 16 } }}>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "#d97706" }}>{busy ? "—" : counts.locked}</div>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Vaqtincha</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#d97706" }}>{busy ? "—" : counts.pending}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Kutilmoqda</div>
               </Card>
             </Col>
             <Col xs={12} sm={6}>

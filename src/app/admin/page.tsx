@@ -149,8 +149,8 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const [appsData, statsData] = await Promise.all([
-        api.get<Application[]>("/admin/applications?status=pending"),
-        api.get<AdminStats>("/admin/stats"),
+        api.getApplications("pending"),
+        api.getAdminStats(),
       ]);
       setApplications(Array.isArray(appsData) ? appsData : []);
       setStats(statsData as AdminStats);
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
       onOk: async () => {
         setIsClearing(true);
         try {
-          const res = await api.delete<{ deleted_count: number; message: string }>("/admin/bookings/clear-old");
+          const res = await api.clearOldBookings();
           message.success(res.message || `${res.deleted_count} ta bron o'chirildi`);
           await fetchData();
         } catch {

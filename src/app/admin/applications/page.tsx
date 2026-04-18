@@ -10,9 +10,11 @@ import {
   SearchOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   EnvironmentOutlined, PhoneOutlined, CalendarOutlined, DollarOutlined,
   DeleteOutlined, ExclamationCircleOutlined, FileTextOutlined, ReloadOutlined,
-  EyeOutlined,
+  EyeOutlined, SendOutlined, CopyOutlined, LinkOutlined,
 } from "@ant-design/icons";
 import { api } from "@/lib/api";
+
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "polyabronuz_bot";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -52,6 +54,7 @@ export default function AdminApplicationsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("pending");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [detailApp, setDetailApp] = useState<Application | null>(null);
+  const [telegramLink, setTelegramLink] = useState<{ link: string; field_name: string } | null>(null);
 
   useEffect(() => { fetchApplications(); }, [filterStatus]);
 
@@ -72,18 +75,27 @@ export default function AdminApplicationsPage() {
     setActionLoading(id);
     try {
       if (action === "approve") {
-        await api.approveApplication(id);
+        const result = await api.approveApplication(id);
+        const link = `https://t.me/${BOT_USERNAME}?start=owner_${result.field_id}_${result.owner_invite_token}`;
+        setApplications((apps) => apps.filter((a) => a.id !== id));
+        setDetailApp(null);
+        setTelegramLink({ link, field_name: result.field_name });
       } else {
         await api.rejectApplication(id);
+        setApplications((apps) => apps.filter((a) => a.id !== id));
+        setDetailApp(null);
+        message.success("Ariza rad etildi");
       }
-      setApplications((apps) => apps.filter((a) => a.id !== id));
-      setDetailApp(null);
-      message.success(action === "approve" ? "✅ Ariza tasdiqlandi va maydon yaratildi" : "Ariza rad etildi");
     } catch (error: any) {
       message.error(error.message || "Xatolik yuz berdi");
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const copyLink = (link: string) => {
+    navigator.clipboard.writeText(link);
+    message.success("Link nusxalandi!");
   };
 
   const showClearConfirm = () => {
@@ -325,6 +337,116 @@ export default function AdminApplicationsPage() {
           }}
         />
       </Card>
+
+      {/* Telegram Invite Link Modal */}
+      <Modal
+        open={!!telegramLink}
+        onCancel={() => setTelegramLink(null)}
+        footer={null}
+        centered
+        width={480}
+        title={null}
+      >
+        {telegramLink && (
+          <div style={{ padding: "8px 0" }}>
+            {/* Success header */}
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 18,
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 14px",
+                boxShadow: "0 8px 24px rgba(16,185,129,0.35)",
+                fontSize: 28,
+              }}>
+                ✅
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>
+                Maydon tasdiqlandi!
+              </div>
+              <div style={{ fontSize: 14, color: "#64748b" }}>
+                <strong>{telegramLink.field_name}</strong> uchun Telegram ulash linkini maydon egasiga yuboring
+              </div>
+            </div>
+
+            {/* Link box */}
+            <div style={{
+              background: "linear-gradient(135deg, #eff6ff, #f0fdf4)",
+              border: "1.5px solid #bfdbfe",
+              borderRadius: 14,
+              padding: "16px 18px",
+              marginBottom: 16,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <LinkOutlined style={{ marginRight: 5 }} />
+                Telegram Bot Linki
+              </div>
+              <div style={{
+                fontFamily: "monospace",
+                fontSize: 12,
+                color: "#1e40af",
+                wordBreak: "break-all",
+                lineHeight: 1.6,
+                background: "rgba(255,255,255,0.7)",
+                padding: "8px 12px",
+                borderRadius: 8,
+              }}>
+                {telegramLink.link}
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div style={{
+              background: "#fffbeb",
+              border: "1px solid #fde68a",
+              borderRadius: 12,
+              padding: "12px 16px",
+              marginBottom: 20,
+            }}>
+              <div style={{ fontSize: 12, color: "#92400e", fontWeight: 600, marginBottom: 6 }}>
+                📋 Ko'rsatma:
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#78350f", lineHeight: 1.8 }}>
+                <li>Quyidagi tugmalardan birini bosing</li>
+                <li>Linkni maydon egasiga yuboring (SMS, Telegram, WhatsApp)</li>
+                <li>Ega link orqali botni ochib, Telegram akkauntini ulaydi</li>
+                <li>Shundan keyin yangi bronlar haqida bildirishnoma oladi</li>
+              </ol>
+            </div>
+
+            {/* Action buttons */}
+            <Space style={{ width: "100%" }} direction="vertical" size={8}>
+              <Button
+                type="primary"
+                icon={<CopyOutlined />}
+                block
+                size="large"
+                onClick={() => copyLink(telegramLink.link)}
+                style={{ height: 46, borderRadius: 12, fontWeight: 600, fontSize: 14 }}
+              >
+                Linkni nusxalash
+              </Button>
+              <Button
+                icon={<SendOutlined />}
+                block
+                size="large"
+                href={`https://t.me/share/url?url=${encodeURIComponent(telegramLink.link)}&text=${encodeURIComponent(`Polya botida ${telegramLink.field_name} maydonini boshqarish uchun ushbu linkni bosing`)}`}
+                target="_blank"
+                style={{ height: 46, borderRadius: 12, fontWeight: 600, fontSize: 14, background: "#0088cc", color: "#fff", border: "none" }}
+              >
+                Telegram orqali ulashish
+              </Button>
+              <Button
+                block size="large"
+                onClick={() => setTelegramLink(null)}
+                style={{ height: 42, borderRadius: 12, color: "#64748b" }}
+              >
+                Yopish
+              </Button>
+            </Space>
+          </div>
+        )}
+      </Modal>
 
       {/* Detail Modal */}
       <Modal

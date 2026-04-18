@@ -9,8 +9,11 @@ import type { ColumnsType } from "antd/es/table";
 import {
   SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
   EyeOutlined, EyeInvisibleOutlined, UploadOutlined, ReloadOutlined, EnvironmentOutlined,
+  SendOutlined, CopyOutlined, LinkOutlined,
 } from "@ant-design/icons";
 import { api } from "@/lib/api";
+
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "polyabronuz_bot";
 
 interface Field {
   id: number;
@@ -24,6 +27,7 @@ interface Field {
   phone_number?: string | null;
   description?: string | null;
   owner_telegram_chat_id?: string | null;
+  owner_invite_token?: string | null;
 }
 
 const { Title, Text } = Typography;
@@ -46,6 +50,7 @@ export default function AdminFieldsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [form] = Form.useForm();
+  const [fieldTelegramLink, setFieldTelegramLink] = useState<{ link: string; field_name: string } | null>(null);
 
   useEffect(() => {
     fetchFields();
@@ -247,9 +252,22 @@ export default function AdminFieldsPage() {
     {
       title: "Amallar",
       key: "actions",
-      width: 120,
+      width: 150,
       render: (_, record) => (
         <Space size={4}>
+          {record.owner_invite_token && (
+            <Tooltip title="Telegram link yuborish">
+              <Button
+                type="text" size="small"
+                icon={<SendOutlined />}
+                onClick={() => {
+                  const link = `https://t.me/${BOT_USERNAME}?start=owner_${record.id}_${record.owner_invite_token}`;
+                  setFieldTelegramLink({ link, field_name: record.name });
+                }}
+                style={{ color: "#0088cc", background: "#e0f2fe", borderRadius: 8, width: 32, height: 32 }}
+              />
+            </Tooltip>
+          )}
           <Tooltip title={record.is_active ? "O'chirish" : "Faollashtirish"}>
             <Button
               type="text" size="small"
@@ -373,6 +391,78 @@ export default function AdminFieldsPage() {
           }}
         />
       </Card>
+
+      {/* Telegram Invite Link Modal */}
+      <Modal
+        open={!!fieldTelegramLink}
+        onCancel={() => setFieldTelegramLink(null)}
+        footer={null}
+        width={480}
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 8,
+              background: "linear-gradient(135deg, #0088cc, #006eaa)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontSize: 16,
+            }}>
+              <SendOutlined />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: "#0f172a" }}>Telegram Taklif Havolasi</div>
+              <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>
+                {fieldTelegramLink?.field_name}
+              </div>
+            </div>
+          </div>
+        }
+      >
+        {fieldTelegramLink && (
+          <div style={{ padding: "8px 0" }}>
+            <div style={{
+              background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 12,
+              padding: "16px", marginBottom: 16,
+            }}>
+              <div style={{ fontSize: 12, color: "#0369a1", fontWeight: 600, marginBottom: 8 }}>
+                <LinkOutlined style={{ marginRight: 4 }} />
+                Taklif havolasi:
+              </div>
+              <div style={{
+                fontSize: 13, color: "#0f172a", wordBreak: "break-all",
+                background: "#fff", borderRadius: 8, padding: "10px 12px",
+                border: "1px solid #e0f2fe", fontFamily: "monospace",
+              }}>
+                {fieldTelegramLink.link}
+              </div>
+            </div>
+
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 16, lineHeight: 1.6 }}>
+              Ushbu havolani maydon egasiga yuboring. Havola orqali bot bilan ulanganda, maydon egasi bronlarni boshqara oladi.
+            </div>
+
+            <Space style={{ width: "100%", justifyContent: "center" }} size={12}>
+              <Button
+                size="large" icon={<CopyOutlined />}
+                onClick={() => {
+                  navigator.clipboard.writeText(fieldTelegramLink.link);
+                  message.success("Havola nusxalandi!");
+                }}
+                style={{ borderRadius: 10, borderColor: "#0088cc", color: "#0088cc", fontWeight: 600 }}
+              >
+                Nusxalash
+              </Button>
+              <Button
+                size="large" type="primary" icon={<SendOutlined />}
+                href={`https://t.me/share/url?url=${encodeURIComponent(fieldTelegramLink.link)}&text=${encodeURIComponent(`${fieldTelegramLink.field_name} - Polya bot taklifi`)}`}
+                target="_blank"
+                style={{ borderRadius: 10, background: "linear-gradient(135deg, #0088cc, #006eaa)", border: "none", fontWeight: 600 }}
+              >
+                Telegram orqali yuborish
+              </Button>
+            </Space>
+          </div>
+        )}
+      </Modal>
 
       {/* Edit/Create Modal */}
       <Modal
