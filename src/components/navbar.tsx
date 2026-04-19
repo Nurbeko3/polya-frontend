@@ -22,7 +22,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Form, Input, Button as AntButton, message } from "antd";
-import { UserOutlined, LockOutlined, PhoneOutlined, MailOutlined } from "@ant-design/icons";
+import { User as UserIcon, Lock, Phone, Mail } from "lucide-react";
 
 /* ─── Liquid Glass helpers ──────────────────────────────────── */
 const glass = {
@@ -119,7 +119,7 @@ function AuthModal({
           {mode === "signup" && (
             <Form.Item name="name" rules={[{ required: true, message: "Ismingizni kiriting" }]}>
               <Input
-                prefix={<UserOutlined className="opacity-30" />}
+                prefix={<UserIcon size={16} className="opacity-30" />}
                 placeholder="To'liq ismingiz"
                 size="large"
                 className="!rounded-2xl"
@@ -129,7 +129,7 @@ function AuthModal({
           )}
           <Form.Item name="email" rules={[{ required: true, message: "Emailni kiriting" }, { type: "email", message: "To'g'ri email kiriting" }]}>
             <Input
-              prefix={<MailOutlined className="opacity-30" />}
+              prefix={<Mail size={16} className="opacity-30" />}
               placeholder="email@example.com"
               size="large"
               className="!rounded-2xl"
@@ -139,7 +139,7 @@ function AuthModal({
           {mode === "signup" && (
             <Form.Item name="phone" rules={[{ required: true, message: "Telefon raqamingizni kiriting" }]} normalize={(val) => val?.replace(/\s/g, "")}>
               <Input
-                prefix={<PhoneOutlined className="opacity-30" />}
+                prefix={<Phone size={16} className="opacity-30" />}
                 placeholder="+998901234567"
                 size="large"
                 className="!rounded-2xl"
@@ -150,7 +150,7 @@ function AuthModal({
           )}
           <Form.Item name="password" rules={[{ required: true, message: "Parolingizni kiriting" }]}>
             <Input.Password
-              prefix={<LockOutlined className="opacity-30" />}
+              prefix={<Lock size={16} className="opacity-30" />}
               placeholder="Parol"
               size="large"
               className="!rounded-2xl"

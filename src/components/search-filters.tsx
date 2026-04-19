@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input, Select, Row, Col } from "antd";
-import { SearchOutlined, ClearOutlined } from "@ant-design/icons";
+import { Search, Eraser } from "lucide-react";
 import { FieldType } from "@/types";
 import { useTheme } from "@/components/theme/theme-provider";
 
@@ -50,7 +50,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
           <Col xs={24} md={7}>
             <Input
               placeholder="Shahar yoki tuman..."
-              prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+              prefix={<Search size={16} style={{ color: '#9ca3af' }} />}
               size="large"
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -105,7 +105,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
           <Col xs={12} md={3}>
             <Button
               type="primary"
-              icon={<SearchOutlined />}
+              icon={<Search size={16} />}
               onClick={handleSearch}
               loading={isLoading}
               size="large"
@@ -116,7 +116,7 @@ export function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
           </Col>
           <Col xs={12} md={2}>
             <Button
-              icon={<ClearOutlined />}
+              icon={<Eraser size={16} />}
               onClick={handleClear}
               size="large"
               block

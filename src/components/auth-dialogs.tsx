@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, Input, Form, Typography, Space, message, Modal } from "antd";
-import { LockOutlined, PhoneOutlined, LoginOutlined, UserOutlined, MailOutlined } from "@ant-design/icons";
+import { Lock, Phone, LogIn, User, Mail } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { isValidUzPhone } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -89,7 +89,7 @@ export function AuthDialogs() {
     <>
       <Button
         type="primary"
-        icon={<LoginOutlined />}
+        icon={<LogIn size={16} />}
         onClick={() => {
           setModalOpen(true);
           setTimeout(() => form.setFieldValue("phone", "+998"), 0);
@@ -144,7 +144,7 @@ export function AuthDialogs() {
                 ]}
               >
                 <Input
-                  prefix={<UserOutlined style={{ color: "#9ca3af" }} />}
+                  prefix={<User size={16} style={{ color: "#9ca3af" }} />}
                   placeholder="To'liq ismingiz"
                   size="large"
                   style={{ backgroundColor: inputBg, borderRadius: 10, height: 48 }}
@@ -161,7 +161,7 @@ export function AuthDialogs() {
               ]}
             >
               <Input
-                prefix={<MailOutlined style={{ color: "#9ca3af" }} />}
+                prefix={<Mail size={16} style={{ color: "#9ca3af" }} />}
                 placeholder="email@example.com"
                 size="large"
                 style={{ backgroundColor: inputBg, borderRadius: 10, height: 48 }}
@@ -176,7 +176,7 @@ export function AuthDialogs() {
                 normalize={(val) => val?.replace(/\s/g, "")}
               >
                 <Input
-                  prefix={<PhoneOutlined style={{ color: "#9ca3af" }} />}
+                  prefix={<Phone size={16} style={{ color: "#9ca3af" }} />}
                   placeholder="+998901234567"
                   size="large"
                   style={{ backgroundColor: inputBg, borderRadius: 10, height: 48 }}
@@ -194,7 +194,7 @@ export function AuthDialogs() {
               ]}
             >
               <Input.Password
-                prefix={<LockOutlined style={{ color: "#9ca3af" }} />}
+                prefix={<Lock size={16} style={{ color: "#9ca3af" }} />}
                 placeholder={mode === "signup" ? "Kamida 6 ta belgi" : "Parolingiz"}
                 size="large"
                 style={{ backgroundColor: inputBg, borderRadius: 10, height: 48 }}

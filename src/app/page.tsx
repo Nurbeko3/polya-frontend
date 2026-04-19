@@ -10,7 +10,7 @@ import { Navbar } from "@/components/navbar";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Typography, Card, Row, Col, Button, Spin, Empty, Badge, Space, Divider } from "antd";
-import { EnvironmentOutlined, TrophyOutlined, CalendarOutlined, UserOutlined, RightOutlined, SearchOutlined, PlusOutlined, SafetyCertificateOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { Trophy, Calendar, ChevronRight, Search, Plus, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useTheme } from "@/components/theme/theme-provider";
 
 const { Title, Text, Paragraph } = Typography;
@@ -73,19 +73,19 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: <CalendarOutlined style={{ fontSize: 26 }} />,
+      icon: <Calendar size={26} strokeWidth={2} />,
       title: "Tez bron qilish",
       description: "Bir necha soniyada maydon bron qiling va vaqtingizni tejang",
       color: "#3b82f6"
     },
     {
-      icon: <SafetyCertificateOutlined style={{ fontSize: 26 }} />,
+      icon: <ShieldCheck size={26} strokeWidth={2} />,
       title: "Xavfsiz to'lov",
       description: "Click va Payme orqali xavfsiz va ishonchli to'lovlar",
       color: "#10b981"
     },
     {
-      icon: <TrophyOutlined style={{ fontSize: 26 }} />,
+      icon: <Trophy size={26} strokeWidth={2} />,
       title: "Keng tanlov",
       description: "Turli sport turlari va shaharlar bo'yicha eng yaxshi maydonlar",
       color: "#f59e0b"
@@ -97,21 +97,21 @@ export default function HomePage() {
       step: "01",
       title: "Maydonni tanlang",
       desc: "O'zingizga qulay sport turi va joylashuvni filtrlar orqali tezda toping.",
-      icon: <SearchOutlined style={{ fontSize: 28 }} />,
+      icon: <Search size={24} strokeWidth={2} />,
       color: "#3b82f6"
     },
     {
       step: "02",
       title: "Vaqtni belgilang",
       desc: "Kalendar orqali bo'sh vaqtni tanlang va ma'lumotlaringizni kiriting.",
-      icon: <CalendarOutlined style={{ fontSize: 28 }} />,
+      icon: <Calendar size={24} strokeWidth={2} />,
       color: "#8b5cf6"
     },
     {
       step: "03",
       title: "To'lov va O'yin",
       desc: "Click yoki Payme orqali to'lovni amalga oshiring va o'yinga tayyorlaning!",
-      icon: <CheckCircleOutlined style={{ fontSize: 28 }} />,
+      icon: <CheckCircle2 size={24} strokeWidth={2} />,
       color: "#10b981"
     },
   ];
@@ -159,7 +159,7 @@ export default function HomePage() {
             </Paragraph>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a href="#fields" className="w-full sm:w-auto">
-                <Button type="primary" size="large" icon={<SearchOutlined />} block>
+                <Button type="primary" size="large" icon={<Search size={16} />} block>
                   Maydonlarni ko'rish
                 </Button>
               </a>
@@ -169,7 +169,7 @@ export default function HomePage() {
                   fetchStats();
                 }}
                 trigger={
-                  <Button size="large" icon={<PlusOutlined />} block>
+                  <Button size="large" icon={<Plus size={16} />} block>
                     Maydon qo'shish
                   </Button>
                 }
@@ -356,7 +356,7 @@ export default function HomePage() {
           </Row>
           <div className="text-center mt-8 md:mt-12">
             <a href="#fields">
-              <Button type="primary" size="large" icon={<RightOutlined />}>
+              <Button type="primary" size="large" icon={<ChevronRight size={16} />}>
                 Boshlash
               </Button>
             </a>

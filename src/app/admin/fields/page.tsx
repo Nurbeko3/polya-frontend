@@ -8,10 +8,10 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
-  EyeOutlined, EyeInvisibleOutlined, UploadOutlined, ReloadOutlined, EnvironmentOutlined,
-  SendOutlined, CopyOutlined, LinkOutlined,
-} from "@ant-design/icons";
+  Search as SearchIcon, Plus, Pencil, Trash2,
+  Eye, EyeOff, Upload as UploadIcon, RefreshCw,
+  Send, Copy, Link2,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useTheme } from "@/components/theme/theme-provider";
 
@@ -267,7 +267,7 @@ export default function AdminFieldsPage() {
             <Tooltip title="Telegram link yuborish">
               <Button
                 type="text" size="small"
-                icon={<SendOutlined />}
+                icon={<Send size={14} />}
                 onClick={() => {
                   const link = `https://t.me/${BOT_USERNAME}?start=owner_${record.id}_${record.owner_invite_token}`;
                   setFieldTelegramLink({ link, field_name: record.name });
@@ -279,7 +279,7 @@ export default function AdminFieldsPage() {
           <Tooltip title={record.is_active ? "O'chirish" : "Faollashtirish"}>
             <Button
               type="text" size="small"
-              icon={record.is_active ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              icon={record.is_active ? <EyeOff size={14} /> : <Eye size={14} />}
               onClick={() => handleToggleStatus(record)}
               style={{
                 color: record.is_active ? "#f59e0b" : "#10b981",
@@ -291,7 +291,7 @@ export default function AdminFieldsPage() {
           <Tooltip title="Tahrirlash">
             <Button
               type="text" size="small"
-              icon={<EditOutlined />}
+              icon={<Pencil size={14} />}
               onClick={() => handleEdit(record)}
               style={{ color: "#6366f1", background: "#f5f3ff", borderRadius: 8, width: 32, height: 32 }}
             />
@@ -307,7 +307,7 @@ export default function AdminFieldsPage() {
             <Tooltip title="O'chirish">
               <Button
                 type="text" size="small" danger
-                icon={<DeleteOutlined />}
+                icon={<Trash2 size={14} />}
                 style={{ background: "#fef2f2", borderRadius: 8, width: 32, height: 32 }}
               />
             </Tooltip>
@@ -336,13 +336,13 @@ export default function AdminFieldsPage() {
         </div>
         <Space wrap>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<RefreshCw size={16} />}
             onClick={fetchFields}
             loading={isLoading}
             style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           />
           <Button
-            type="primary" icon={<PlusOutlined />}
+            type="primary" icon={<Plus size={16} />}
             onClick={handleOpenCreate}
             style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", borderRadius: 10, fontWeight: 600 }}
           >
@@ -415,7 +415,7 @@ export default function AdminFieldsPage() {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontSize: 16,
             }}>
-              <SendOutlined />
+              <Send size={16} />
             </div>
             <div>
               <div style={{ fontWeight: 700, color: textPrimary }}>Telegram Taklif Havolasi</div>
@@ -433,7 +433,7 @@ export default function AdminFieldsPage() {
               padding: "16px", marginBottom: 16,
             }}>
               <div style={{ fontSize: 12, color: isDark ? "#38bdf8" : "#0369a1", fontWeight: 600, marginBottom: 8 }}>
-                <LinkOutlined style={{ marginRight: 4 }} />
+                <Link2 size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />
                 Taklif havolasi:
               </div>
               <div style={{
@@ -451,7 +451,7 @@ export default function AdminFieldsPage() {
 
             <Space style={{ width: "100%", justifyContent: "center" }} size={12}>
               <Button
-                size="large" icon={<CopyOutlined />}
+                size="large" icon={<Copy size={16} />}
                 onClick={() => {
                   navigator.clipboard.writeText(fieldTelegramLink.link);
                   message.success("Havola nusxalandi!");
@@ -461,7 +461,7 @@ export default function AdminFieldsPage() {
                 Nusxalash
               </Button>
               <Button
-                size="large" type="primary" icon={<SendOutlined />}
+                size="large" type="primary" icon={<Send size={16} />}
                 href={`https://t.me/share/url?url=${encodeURIComponent(fieldTelegramLink.link)}&text=${encodeURIComponent(`${fieldTelegramLink.field_name} - Polya bot taklifi`)}`}
                 target="_blank"
                 style={{ borderRadius: 10, background: "linear-gradient(135deg, #0088cc, #006eaa)", border: "none", fontWeight: 600 }}
@@ -483,7 +483,7 @@ export default function AdminFieldsPage() {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontSize: 14,
             }}>
-              {editingField ? <EditOutlined /> : <PlusOutlined />}
+              {editingField ? <Pencil size={16} /> : <Plus size={16} />}
             </div>
             <div>
               <div style={{ fontWeight: 700, color: textPrimary }}>
@@ -517,7 +517,7 @@ export default function AdminFieldsPage() {
                 />
               ) : (
                 <div style={{ textAlign: "center", color: "#94a3b8" }}>
-                  <UploadOutlined style={{ fontSize: 28, marginBottom: 8 }} />
+                  <UploadIcon size={28} style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 13 }}>Rasm yuklash</div>
                 </div>
               )}

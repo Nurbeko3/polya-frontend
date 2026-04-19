@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Field } from "@/types";
 import { Card, Tag, Rate, Row, Col, Typography } from "antd";
-import { EnvironmentOutlined } from "@ant-design/icons";
+import { MapPin } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useTheme } from "@/components/theme/theme-provider";
 
@@ -54,7 +54,7 @@ export function FieldCard({ field }: FieldCardProps) {
               </div>
             )}
             <div className="absolute top-3 right-3">
-              <Tag icon={<EnvironmentOutlined />} style={{ backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.9)" }}>
+              <Tag icon={<MapPin size={12} style={{ display: "inline", marginRight: 4, verticalAlign: "-2px" }} />} style={{ backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.9)" }}>
                 {field.city}
               </Tag>
             </div>

@@ -10,28 +10,28 @@ import { useTheme } from "@/components/theme/theme-provider";
 import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Space, Button, Spin } from "antd";
 import type { MenuProps } from "antd";
 import {
-  DashboardOutlined,
-  FileTextOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  ArrowLeftOutlined,
-  BellOutlined,
-  SettingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from "@ant-design/icons";
+  LayoutDashboard,
+  FileText,
+  MapPin,
+  Calendar,
+  Users,
+  LogOut,
+  ArrowLeft,
+  Bell,
+  Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 const navigation = [
-  { key: "/admin", icon: <DashboardOutlined />, label: "Dashboard" },
-  { key: "/admin/applications", icon: <FileTextOutlined />, label: "Arizalar" },
-  { key: "/admin/fields", icon: <EnvironmentOutlined />, label: "Maydonlar" },
-  { key: "/admin/bookings", icon: <CalendarOutlined />, label: "Bronlar" },
-  { key: "/admin/users", icon: <UserOutlined />, label: "Foydalanuvchilar" },
+  { key: "/admin", icon: <LayoutDashboard size={18} strokeWidth={2} />, label: "Dashboard" },
+  { key: "/admin/applications", icon: <FileText size={18} strokeWidth={2} />, label: "Arizalar" },
+  { key: "/admin/fields", icon: <MapPin size={18} strokeWidth={2} />, label: "Maydonlar" },
+  { key: "/admin/bookings", icon: <Calendar size={18} strokeWidth={2} />, label: "Bronlar" },
+  { key: "/admin/users", icon: <Users size={18} strokeWidth={2} />, label: "Foydalanuvchilar" },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -112,10 +112,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       disabled: true,
     },
     { type: "divider" },
-    { key: "settings", icon: <SettingOutlined />, label: "Sozlamalar" },
+    { key: "settings", icon: <Settings size={14} />, label: "Sozlamalar" },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <LogOut size={14} />,
       label: "Chiqish",
       danger: true,
       onClick: () => { logout(); router.push("/admin/login"); },
@@ -278,7 +278,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               cursor: "pointer",
               transition: "all 0.2s",
             }}>
-              <ArrowLeftOutlined style={{ fontSize: 14 }} />
+              <ArrowLeft size={14} strokeWidth={2} />
               {!collapsed && <span style={{ fontSize: 13 }}>Saytga qaytish</span>}
             </div>
           </Link>
@@ -306,17 +306,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Desktop toggle */}
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: 16, color: isDark ? "#94a3b8" : "#64748b" }}
+              style={{ color: isDark ? "#94a3b8" : "#64748b" }}
               className="max-md:!hidden"
             />
             {/* Mobile toggle */}
             <Button
               type="text"
-              icon={<MenuUnfoldOutlined />}
+              icon={<PanelLeftOpen size={18} />}
               onClick={() => setMobileOpen(true)}
-              style={{ fontSize: 16, color: isDark ? "#94a3b8" : "#64748b" }}
+              style={{ color: isDark ? "#94a3b8" : "#64748b" }}
               className="md:!hidden"
             />
             <div>
@@ -333,8 +333,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Badge count={pendingApps} size="small" color="#ef4444">
               <Button
                 type="text"
-                icon={<BellOutlined />}
-                style={{ color: isDark ? "#94a3b8" : "#64748b", fontSize: 18 }}
+                icon={<Bell size={18} strokeWidth={2} />}
+                style={{ color: isDark ? "#94a3b8" : "#64748b" }}
                 onClick={() => router.push("/admin/applications")}
               />
             </Badge>

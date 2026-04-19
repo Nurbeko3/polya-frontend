@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Button, Input, Form, Select, message, Modal, Typography, Row, Col } from "antd";
-import { PlusOutlined, PhoneOutlined, DollarOutlined } from "@ant-design/icons";
+import { Plus, Phone, DollarSign } from "lucide-react";
 import { FieldType } from "@/types";
 import { useTheme } from "@/components/theme/theme-provider";
 import { PhotoIcon, XMarkIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
@@ -148,7 +148,7 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
       {trigger ? (
         <div onClick={() => setOpen(true)}>{trigger}</div>
       ) : (
-        <Button icon={<PlusOutlined />} onClick={() => setOpen(true)}>
+        <Button icon={<Plus size={16} />} onClick={() => setOpen(true)}>
           Maydon qo'shish
         </Button>
       )}
@@ -302,7 +302,7 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
                 rules={[{ required: true, message: "Narxni kiriting" }]}
               >
                 <Input
-                  prefix={<DollarOutlined style={{ color: "#9ca3af" }} />}
+                  prefix={<DollarSign size={16} style={{ color: "#9ca3af" }} />}
                   type="number"
                   placeholder="150000"
                   size="large"
@@ -317,7 +317,7 @@ export function AddFieldDialog({ onSuccess, trigger }: AddFieldDialogProps) {
                 rules={[{ required: true, message: "Telefonni kiriting" }]}
               >
                 <Input
-                  prefix={<PhoneOutlined style={{ color: "#9ca3af" }} />}
+                  prefix={<Phone size={16} style={{ color: "#9ca3af" }} />}
                   placeholder="+998 90 123 45 67"
                   size="large"
                   style={{ backgroundColor: inputBg }}
