@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!hydrated) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f172a" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: isDark ? "#0f172a" : "#f1f5f9" }}>
         <Spin size="large" />
       </div>
     );

@@ -13,6 +13,7 @@ import {
   SendOutlined, CopyOutlined, LinkOutlined,
 } from "@ant-design/icons";
 import { api } from "@/lib/api";
+import { useTheme } from "@/components/theme/theme-provider";
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "polyabronuz_bot";
 
@@ -53,6 +54,11 @@ export default function AdminFieldsPage() {
   const [form] = Form.useForm();
   const [fieldTelegramLink, setFieldTelegramLink] = useState<{ link: string; field_name: string } | null>(null);
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const textPrimary = isDark ? "#f1f5f9" : "#0f172a";
+  const textSecondary = isDark ? "#cbd5e1" : "#334155";
+  const cardBorder = isDark ? "#334155" : "#e2e8f0";
 
   useEffect(() => {
     fetchFields();
@@ -182,12 +188,12 @@ export default function AdminFieldsPage() {
             <Avatar
               size={48} shape="square"
               src={record.image_url || undefined}
-              style={{ borderRadius: 10, background: cfg?.bg || "#f1f5f9", fontSize: 20, flexShrink: 0 }}
+              style={{ borderRadius: 10, background: cfg?.bg || (isDark ? "#1e293b" : "#f1f5f9"), fontSize: 20, flexShrink: 0 }}
             >
               {cfg?.emoji || "🏟️"}
             </Avatar>
             <div>
-              <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ fontWeight: 700, color: textPrimary, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
                 {record.name}
                 {record.owner_telegram_chat_id && (
                   <Tooltip title={`Telegram ID: ${record.owner_telegram_chat_id}`}>
@@ -212,7 +218,7 @@ export default function AdminFieldsPage() {
       key: "location",
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 600, color: "#334155", fontSize: 13 }}>{record.city}</div>
+          <div style={{ fontWeight: 600, color: textSecondary, fontSize: 13 }}>{record.city}</div>
           <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{record.address}</div>
         </div>
       ),
@@ -223,7 +229,7 @@ export default function AdminFieldsPage() {
       key: "price_per_hour",
       render: (price) => (
         <div>
-          <span style={{ fontWeight: 700, color: "#0f172a", fontSize: 15 }}>{price.toLocaleString()}</span>
+          <span style={{ fontWeight: 700, color: textPrimary, fontSize: 15 }}>{price.toLocaleString()}</span>
           <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 4 }}>UZS</span>
         </div>
       ),
@@ -346,7 +352,7 @@ export default function AdminFieldsPage() {
       </div>
 
       {/* Search */}
-      <Card style={{ borderRadius: 14, border: "1px solid #e2e8f0" }} styles={{ body: { padding: "16px 20px" } }}>
+      <Card style={{ borderRadius: 14, border: `1px solid ${cardBorder}` }} styles={{ body: { padding: "16px 20px" } }}>
         <Row gutter={16} align="middle">
           <Col xs={24} md={14}>
             <Search
@@ -412,7 +418,7 @@ export default function AdminFieldsPage() {
               <SendOutlined />
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: "#0f172a" }}>Telegram Taklif Havolasi</div>
+              <div style={{ fontWeight: 700, color: textPrimary }}>Telegram Taklif Havolasi</div>
               <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>
                 {fieldTelegramLink?.field_name}
               </div>
@@ -423,23 +429,23 @@ export default function AdminFieldsPage() {
         {fieldTelegramLink && (
           <div style={{ padding: "8px 0" }}>
             <div style={{
-              background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 12,
+              background: isDark ? "#0c1f33" : "#f0f9ff", border: `1px solid ${isDark ? "#1e3a5f" : "#bae6fd"}`, borderRadius: 12,
               padding: "16px", marginBottom: 16,
             }}>
-              <div style={{ fontSize: 12, color: "#0369a1", fontWeight: 600, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: isDark ? "#38bdf8" : "#0369a1", fontWeight: 600, marginBottom: 8 }}>
                 <LinkOutlined style={{ marginRight: 4 }} />
                 Taklif havolasi:
               </div>
               <div style={{
-                fontSize: 13, color: "#0f172a", wordBreak: "break-all",
-                background: "#fff", borderRadius: 8, padding: "10px 12px",
-                border: "1px solid #e0f2fe", fontFamily: "monospace",
+                fontSize: 13, color: textPrimary, wordBreak: "break-all",
+                background: isDark ? "#0f172a" : "#fff", borderRadius: 8, padding: "10px 12px",
+                border: `1px solid ${isDark ? "#1e3a5f" : "#e0f2fe"}`, fontFamily: "monospace",
               }}>
                 {fieldTelegramLink.link}
               </div>
             </div>
 
-            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 16, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#64748b", marginBottom: 16, lineHeight: 1.6 }}>
               Ushbu havolani maydon egasiga yuboring. Havola orqali bot bilan ulanganda, maydon egasi bronlarni boshqara oladi.
             </div>
 
@@ -480,7 +486,7 @@ export default function AdminFieldsPage() {
               {editingField ? <EditOutlined /> : <PlusOutlined />}
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: "#0f172a" }}>
+              <div style={{ fontWeight: 700, color: textPrimary }}>
                 {editingField ? "Maydonni tahrirlash" : "Yangi maydon qo'shish"}
               </div>
               <div style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>
@@ -493,14 +499,14 @@ export default function AdminFieldsPage() {
         onCancel={handleModalClose}
         footer={null}
         width={640}
-        styles={{ header: { borderBottom: "1px solid #f1f5f9", paddingBottom: 16 } }}
+        styles={{ header: { borderBottom: `1px solid ${isDark ? "#1e293b" : "#f1f5f9"}`, paddingBottom: 16 } }}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 20 }}>
           {/* Image Upload */}
           <div style={{ marginBottom: 20, textAlign: "center" }}>
             <div style={{
               width: "100%", height: 160, borderRadius: 12,
-              border: "2px dashed #e2e8f0", background: "#f8fafc",
+              border: `2px dashed ${isDark ? "#334155" : "#e2e8f0"}`, background: isDark ? "#0f172a" : "#f8fafc",
               display: "flex", alignItems: "center", justifyContent: "center",
               overflow: "hidden", position: "relative", cursor: "pointer",
             }}>

@@ -70,7 +70,7 @@ export function FieldCard({ field }: FieldCardProps) {
         <Text type="secondary" className="block mb-2 truncate text-sm">{field.address}</Text>
         <Row justify="space-between" align="middle">
           <Col>
-            <span className="text-xl font-bold" style={{ color: "#2563eb" }}>
+            <span className="text-xl font-bold" style={{ color: isDark ? "#60a5fa" : "#2563eb" }}>
               {formatPrice(field.price_per_hour)}
             </span>
             <Text type="secondary" className="text-xs">/soat</Text>

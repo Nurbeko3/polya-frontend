@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
+import { useTheme } from "@/components/theme/theme-provider";
 
 interface Application {
   id: number;
@@ -142,6 +143,13 @@ export default function AdminDashboard() {
   const [isClearing, setIsClearing] = useState(false);
   const { user } = useAuthStore();
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const textPrimary = isDark ? "#f1f5f9" : "#0f172a";
+  const cardBorder = isDark ? "#334155" : "#e2e8f0";
+  const dividerBg = isDark ? "#334155" : "#f1f5f9";
+  const mutedBg = isDark ? "#0f172a" : "#f8fafc";
+  const mutedBorder = isDark ? "#1e293b" : "#f1f5f9";
 
   useEffect(() => {
     fetchData();
@@ -293,7 +301,7 @@ export default function AdminDashboard() {
         {/* Recent Applications */}
         <Col xs={24} lg={14}>
           <Card
-            style={{ borderRadius: 16, border: "1px solid #e2e8f0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+            style={{ borderRadius: 16, border: `1px solid ${cardBorder}`, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
             title={
               <Space>
                 <div style={{
@@ -304,7 +312,7 @@ export default function AdminDashboard() {
                 }}>
                   <ClockCircleOutlined />
                 </div>
-                <span style={{ fontWeight: 700, color: "#0f172a" }}>Kutilayotgan Arizalar</span>
+                <span style={{ fontWeight: 700, color: textPrimary }}>Kutilayotgan Arizalar</span>
                 {applications.length > 0 && (
                   <Tag color="orange" style={{ borderRadius: 20, fontWeight: 600 }}>{applications.length}</Tag>
                 )}
@@ -329,24 +337,24 @@ export default function AdminDashboard() {
                   <div key={app.id} style={{
                     display: "flex", alignItems: "center", gap: 12,
                     padding: "12px 20px",
-                    borderBottom: "1px solid #f1f5f9",
+                    borderBottom: `1px solid ${mutedBorder}`,
                     transition: "background 0.15s",
                   }}>
                     <Avatar
                       size={44} shape="square"
                       src={app.image_url}
-                      style={{ borderRadius: 10, background: "#f1f5f9", fontSize: 20, flexShrink: 0 }}
+                      style={{ borderRadius: 10, background: isDark ? "#1e293b" : "#f1f5f9", fontSize: 20, flexShrink: 0 }}
                     >
                       {fieldTypeLabels[app.field_type]?.emoji || "🏟️"}
                     </Avatar>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: "#0f172a", fontSize: 14 }}>{app.field_name}</div>
+                      <div style={{ fontWeight: 600, color: textPrimary, fontSize: 14 }}>{app.field_name}</div>
                       <div style={{ fontSize: 12, color: "#94a3b8" }}>
                         {app.city} · {app.price_per_hour.toLocaleString()} UZS/soat
                       </div>
                     </div>
                     <Tag
-                      style={{ borderRadius: 20, fontWeight: 600, fontSize: 11, border: "none", background: "#fef3c7", color: "#92400e" }}
+                      style={{ borderRadius: 20, fontWeight: 600, fontSize: 11, border: "none", background: isDark ? "#422006" : "#fef3c7", color: isDark ? "#fcd34d" : "#92400e" }}
                     >
                       Kutilmoqda
                     </Tag>
@@ -359,7 +367,7 @@ export default function AdminDashboard() {
                 style={{ padding: "24px 0" }}
                 description={
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontWeight: 600, color: "#0f172a", marginBottom: 4 }}>Hammasi ko'rib chiqilgan ✨</div>
+                    <div style={{ fontWeight: 600, color: textPrimary, marginBottom: 4 }}>Hammasi ko'rib chiqilgan ✨</div>
                     <div style={{ fontSize: 13, color: "#94a3b8" }}>Hozircha yangi arizalar yo'q</div>
                   </div>
                 }
@@ -373,7 +381,7 @@ export default function AdminDashboard() {
           <Space direction="vertical" size={16} style={{ width: "100%", display: "flex" }}>
             {/* Revenue breakdown */}
             <Card
-              style={{ borderRadius: 16, border: "1px solid #e2e8f0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+              style={{ borderRadius: 16, border: `1px solid ${cardBorder}`, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
               styles={{ body: { padding: 20 } }}
               title={
                 <Space>
@@ -385,7 +393,7 @@ export default function AdminDashboard() {
                   }}>
                     <DollarOutlined />
                   </div>
-                  <span style={{ fontWeight: 700, color: "#0f172a" }}>Daromad Statistikasi</span>
+                  <span style={{ fontWeight: 700, color: textPrimary }}>Daromad Statistikasi</span>
                 </Space>
               }
               extra={
@@ -404,15 +412,15 @@ export default function AdminDashboard() {
               <Space direction="vertical" style={{ width: "100%" }} size={16}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <Text style={{ fontSize: 13, color: "#64748b" }}>Bu oylik daromad</Text>
-                    <Text strong style={{ color: "#0f172a" }}>
+                    <Text style={{ fontSize: 13, color: isDark ? "#94a3b8" : "#64748b" }}>Bu oylik daromad</Text>
+                    <Text strong style={{ color: textPrimary }}>
                       {isLoading ? "—" : `${(stats?.monthly_revenue ?? 0).toLocaleString()} UZS`}
                     </Text>
                   </div>
                   <Progress
                     percent={isLoading ? 0 : Math.min(100, stats?.prev_month_revenue ? Math.round((stats.monthly_revenue / stats.prev_month_revenue) * 100) : 100)}
                     strokeColor="linear-gradient(90deg, #3b82f6, #6366f1)"
-                    trailColor="#f1f5f9"
+                    trailColor={dividerBg}
                     showInfo={false}
                     strokeLinecap="round"
                   />
@@ -420,21 +428,21 @@ export default function AdminDashboard() {
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>Umumiy daromad</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: textPrimary }}>
                       {isLoading ? "—" : `${formatPrice(stats?.total_revenue ?? 0)} UZS`}
                     </div>
                   </div>
-                  <div style={{ width: 1, background: "#f1f5f9" }} />
+                  <div style={{ width: 1, background: dividerBg }} />
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>Oylik bronlar</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: textPrimary }}>
                       {isLoading ? "—" : stats?.monthly_bookings ?? 0}
                     </div>
                   </div>
-                  <div style={{ width: 1, background: "#f1f5f9" }} />
+                  <div style={{ width: 1, background: dividerBg }} />
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>Maydonlar</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: textPrimary }}>
                       {isLoading ? "—" : stats?.total_fields ?? 0}
                     </div>
                   </div>
@@ -444,9 +452,9 @@ export default function AdminDashboard() {
 
             {/* Quick Navigation */}
             <Card
-              style={{ borderRadius: 16, border: "1px solid #e2e8f0", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
+              style={{ borderRadius: 16, border: `1px solid ${cardBorder}`, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
               styles={{ body: { padding: 16 } }}
-              title={<span style={{ fontWeight: 700, color: "#0f172a" }}>Tezkor havolalar</span>}
+              title={<span style={{ fontWeight: 700, color: textPrimary }}>Tezkor havolalar</span>}
             >
               <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 {[
@@ -459,7 +467,7 @@ export default function AdminDashboard() {
                     <div style={{
                       display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 12px", borderRadius: 10,
-                      background: "#f8fafc", border: "1px solid #f1f5f9",
+                      background: mutedBg, border: `1px solid ${mutedBorder}`,
                       cursor: "pointer", transition: "all 0.15s",
                     }}>
                       <div style={{
@@ -470,7 +478,7 @@ export default function AdminDashboard() {
                       }}>
                         {item.icon}
                       </div>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "#0f172a" }}>{item.label}</span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: textPrimary }}>{item.label}</span>
                       {item.badge ? (
                         <span style={{
                           background: "#ef4444", color: "#fff", fontSize: 10,
@@ -479,7 +487,7 @@ export default function AdminDashboard() {
                           {item.badge}
                         </span>
                       ) : (
-                        <ArrowRightOutlined style={{ color: "#cbd5e1", fontSize: 12 }} />
+                        <ArrowRightOutlined style={{ color: isDark ? "#475569" : "#cbd5e1", fontSize: 12 }} />
                       )}
                     </div>
                   </Link>
