@@ -4,19 +4,18 @@ import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, Row, Col, Skeleton, Typography, Space, Tag, Button, Progress, Empty, Avatar, Modal, message } from "antd";
 import {
-  EnvironmentOutlined,
-  FileTextOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ArrowRightOutlined,
-  RiseOutlined,
-  FallOutlined,
-  DollarOutlined,
-  TeamOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+  MapPin,
+  FileText,
+  User,
+  Calendar,
+  Clock,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
@@ -110,7 +109,7 @@ function StatCard({
                 padding: "2px 8px",
                 borderRadius: 20,
               }}>
-                {isPositive ? <RiseOutlined /> : <FallOutlined />}
+                {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                 {Math.abs(trend.value)}%
               </span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>{trend.label}</span>
@@ -208,28 +207,28 @@ export default function AdminDashboard() {
       title: "Aktiv Maydonlar",
       value: stats?.total_fields ?? 0,
       subtitle: "Barcha shaharlarda",
-      icon: <EnvironmentOutlined />,
+      icon: <MapPin size={22} strokeWidth={2} />,
       gradient: "linear-gradient(135deg, #10b981, #059669)",
     },
     {
       title: "Jami Bronlar",
       value: stats?.total_bookings ?? 0,
       subtitle: `Bu oy: ${stats?.monthly_bookings ?? 0} ta`,
-      icon: <CalendarOutlined />,
+      icon: <Calendar size={22} strokeWidth={2} />,
       gradient: "linear-gradient(135deg, #6366f1, #4f46e5)",
     },
     {
       title: "Foydalanuvchilar",
       value: stats?.total_users ?? 0,
       subtitle: "Ro'yxatdan o'tgan",
-      icon: <TeamOutlined />,
+      icon: <Users size={22} strokeWidth={2} />,
       gradient: "linear-gradient(135deg, #f59e0b, #d97706)",
     },
     {
       title: "Oylik Daromad",
       value: `${formatPrice(stats?.monthly_revenue ?? 0)} UZS`,
       subtitle: "Tasdiqlangan to'lovlar",
-      icon: <DollarOutlined />,
+      icon: <DollarSign size={22} strokeWidth={2} />,
       gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
       trend: revenueGrowth !== 0 ? { value: revenueGrowth, label: "o'tgan oyga nisbatan" } : undefined,
     },
@@ -269,7 +268,7 @@ export default function AdminDashboard() {
                 type="primary"
                 size={isMobile ? "middle" : "large"}
                 style={{ background: "rgba(239,68,68,0.9)", border: "none", borderRadius: 10, fontWeight: 600 }}
-                icon={<FileTextOutlined />}
+                icon={<FileText size={16} />}
               >
                 {applications.length} ariza
               </Button>
@@ -279,7 +278,7 @@ export default function AdminDashboard() {
             <Button
               size={isMobile ? "middle" : "large"}
               style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: 10, fontWeight: 600 }}
-              icon={<EnvironmentOutlined />}
+              icon={<MapPin size={16} />}
             >
               Maydonlar
             </Button>
@@ -310,7 +309,7 @@ export default function AdminDashboard() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: "#fff", fontSize: 14,
                 }}>
-                  <ClockCircleOutlined />
+                  <Clock size={16} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontWeight: 700, color: textPrimary }}>Kutilayotgan Arizalar</span>
                 {applications.length > 0 && (
@@ -320,7 +319,7 @@ export default function AdminDashboard() {
             }
             extra={
               <Link href="/admin/applications">
-                <Button type="link" style={{ color: "#6366f1", fontWeight: 600 }} icon={<ArrowRightOutlined />} iconPosition="end">
+                <Button type="link" style={{ color: "#6366f1", fontWeight: 600 }} icon={<ArrowRight size={14} />} iconPosition="end">
                   Barchasini ko'rish
                 </Button>
               </Link>
@@ -391,7 +390,7 @@ export default function AdminDashboard() {
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: "#fff", fontSize: 14,
                   }}>
-                    <DollarOutlined />
+                    <DollarSign size={16} strokeWidth={2.2} />
                   </div>
                   <span style={{ fontWeight: 700, color: textPrimary }}>Daromad Statistikasi</span>
                 </Space>
@@ -400,7 +399,7 @@ export default function AdminDashboard() {
                 <Button
                   size="small"
                   danger
-                  icon={<DeleteOutlined />}
+                  icon={<Trash2 size={12} />}
                   loading={isClearing}
                   onClick={handleClearStats}
                   style={{ borderRadius: 8, fontSize: 12 }}
@@ -458,10 +457,10 @@ export default function AdminDashboard() {
             >
               <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 {[
-                  { href: "/admin/fields", label: "Maydonlar boshqaruvi", icon: <EnvironmentOutlined />, color: "#10b981", bg: "#f0fdf4" },
-                  { href: "/admin/bookings", label: "Bronlar registri", icon: <CalendarOutlined />, color: "#6366f1", bg: "#f5f3ff" },
-                  { href: "/admin/users", label: "Foydalanuvchilar", icon: <UserOutlined />, color: "#f59e0b", bg: "#fffbeb" },
-                  { href: "/admin/applications", label: "Yangi arizalar", icon: <FileTextOutlined />, color: "#ef4444", bg: "#fef2f2", badge: applications.length },
+                  { href: "/admin/fields", label: "Maydonlar boshqaruvi", icon: <MapPin size={16} strokeWidth={2} />, color: "#10b981", bg: "#f0fdf4" },
+                  { href: "/admin/bookings", label: "Bronlar registri", icon: <Calendar size={16} strokeWidth={2} />, color: "#6366f1", bg: "#f5f3ff" },
+                  { href: "/admin/users", label: "Foydalanuvchilar", icon: <User size={16} strokeWidth={2} />, color: "#f59e0b", bg: "#fffbeb" },
+                  { href: "/admin/applications", label: "Yangi arizalar", icon: <FileText size={16} strokeWidth={2} />, color: "#ef4444", bg: "#fef2f2", badge: applications.length },
                 ].map((item) => (
                   <Link key={item.href} href={item.href}>
                     <div style={{
@@ -487,7 +486,7 @@ export default function AdminDashboard() {
                           {item.badge}
                         </span>
                       ) : (
-                        <ArrowRightOutlined style={{ color: isDark ? "#475569" : "#cbd5e1", fontSize: 12 }} />
+                        <ArrowRight size={12} color={isDark ? "#475569" : "#cbd5e1"} />
                       )}
                     </div>
                   </Link>
