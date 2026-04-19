@@ -61,6 +61,7 @@ export default function HomePage() {
     textSecondary: isDark ? "#a1a1aa" : "#6b7280",
     border: isDark ? "#262626" : "#e5e7eb",
     cardBg: isDark ? "#171717" : "#ffffff",
+    accent: isDark ? "#60a5fa" : "#2563eb",
   };
 
   const sportTypes = [
@@ -137,7 +138,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-3xl mx-auto">
             <Badge
-              style={{ backgroundColor: isDark ? "#1e3a5f" : "#eff6ff", color: "#2563eb" }}
+              style={{ backgroundColor: isDark ? "#1e3a5f" : "#eff6ff", color: colors.accent }}
               className="mb-4 md:mb-6"
             >
               O'zbekistonning eng yaxshi bron platformasi
@@ -148,7 +149,7 @@ export default function HomePage() {
               style={{ color: colors.textPrimary }}
             >
               Sport maydonlarini{" "}
-              <span style={{ color: "#2563eb" }}>oson bron qiling</span>
+              <span style={{ color: colors.accent }}>oson bron qiling</span>
             </Title>
             <Paragraph
               className="!text-base md:!text-lg mb-6 md:mb-8 max-w-2xl mx-auto px-2"
@@ -191,7 +192,7 @@ export default function HomePage() {
                   styles={{ body: { padding: "16px 12px" } }}
                 >
                   <div className="text-lg mb-1">{stat.icon}</div>
-                  <div className="text-2xl md:text-3xl font-bold" style={{ color: "#2563eb" }}>
+                  <div className="text-2xl md:text-3xl font-bold" style={{ color: colors.accent }}>
                     {formatValue(stat.value)}
                   </div>
                   <div className="text-xs uppercase tracking-wider mt-1" style={{ color: colors.textSecondary }}>
