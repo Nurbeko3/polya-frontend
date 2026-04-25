@@ -12,7 +12,6 @@ import {
   MoreOutlined, LockOutlined, ReloadOutlined, TeamOutlined, SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/store/auth-store";
-import { api } from "@/lib/api";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const { Text } = Typography;
@@ -133,9 +132,23 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
     try {
       if (editingUser) {
-        await api.updateUserRole(String(editingUser.id), values.is_admin || false);
-        setUsers(users.map((u) => u.id === editingUser.id ? { ...u, is_admin: values.is_admin } : u));
+        const res = await fetch("/api/admin/update-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: editingUser.id,
+            name: values.name,
+            phone: values.phone,
+            email: values.email,
+            is_admin: values.is_admin || false,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Yangilashda xatolik");
+        }
         message.success("Foydalanuvchi yangilandi");
+        await fetchUsers();
       } else {
         const res = await fetch("/api/admin/create-user", {
           method: "POST",

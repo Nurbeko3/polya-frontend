@@ -2,30 +2,13 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#f1f5f9",
-      gap: 16,
-    }}>
-      <div style={{ fontSize: 72, fontWeight: 800, color: "#6366f1" }}>404</div>
-      <div style={{ fontSize: 20, fontWeight: 600, color: "#0f172a" }}>Sahifa topilmadi</div>
-      <div style={{ fontSize: 14, color: "#64748b" }}>Siz qidirgan sahifa mavjud emas</div>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground">
+      <div className="text-7xl font-extrabold text-primary">404</div>
+      <div className="text-xl font-semibold">Sahifa topilmadi</div>
+      <div className="text-sm text-muted-foreground">Siz qidirgan sahifa mavjud emas</div>
       <Link
         href="/"
-        style={{
-          marginTop: 8,
-          padding: "10px 24px",
-          background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-          color: "#fff",
-          borderRadius: 10,
-          fontWeight: 600,
-          textDecoration: "none",
-          fontSize: 14,
-        }}
+        className="mt-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold text-sm no-underline hover:opacity-90 transition-opacity"
       >
         Bosh sahifaga qaytish
       </Link>

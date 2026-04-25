@@ -13,16 +13,21 @@ interface User {
   is_super_admin?: boolean;
 }
 
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 daqiqa
+
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  lastActivity: number | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, phone: string, password: string) => Promise<void>;
   updateProfile: (data: { name?: string; password?: string }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  touchActivity: () => void;
+  checkTimeout: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -32,6 +37,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      lastActivity: null,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
@@ -57,6 +63,7 @@ export const useAuthStore = create<AuthState>()(
             token: data.session?.access_token || null,
             isAuthenticated: true,
             isLoading: false,
+            lastActivity: Date.now(),
           });
         } catch (error) {
           set({ isLoading: false });
@@ -99,6 +106,7 @@ export const useAuthStore = create<AuthState>()(
             token: data.session?.access_token || null,
             isAuthenticated: true,
             isLoading: false,
+            lastActivity: Date.now(),
           });
         } catch (error) {
           set({ isLoading: false });
@@ -164,7 +172,23 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         await supabase.auth.signOut();
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, lastActivity: null });
+      },
+
+      touchActivity: () => {
+        if (get().isAuthenticated) {
+          set({ lastActivity: Date.now() });
+        }
+      },
+
+      checkTimeout: () => {
+        const { isAuthenticated, lastActivity } = get();
+        if (!isAuthenticated || !lastActivity) return false;
+        if (Date.now() - lastActivity > SESSION_TIMEOUT_MS) {
+          get().logout();
+          return true;
+        }
+        return false;
       },
     }),
     {

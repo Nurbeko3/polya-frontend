@@ -5,7 +5,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
-import { api } from "@/lib/api";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Layout, Menu, Avatar, Badge, Dropdown, Typography, Space, Button, Spin } from "antd";
 import type { MenuProps } from "antd";
@@ -68,7 +67,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const fetchPendingApps = async () => {
       try {
-        const data = await api.getApplications("pending");
+        const res = await fetch("/api/admin/applications?status=pending");
+        if (!res.ok) return;
+        const data = await res.json();
         setPendingApps(Array.isArray(data) ? data.length : 0);
       } catch {}
     };

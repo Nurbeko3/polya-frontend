@@ -42,11 +42,13 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true);
-    // HTML class ni bir marta sinxronlaymiz
+  }, []);
+
+  // Theme o'zgarganda HTML class ni sinxronlaymiz
+  useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [theme]);
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);

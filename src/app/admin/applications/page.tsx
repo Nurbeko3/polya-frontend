@@ -8,12 +8,12 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  CheckCircle2, XCircle, Clock, MapPin, Phone, Calendar, DollarSign,
-  Trash2, FileText, RefreshCw, Eye, Send, Copy, Link2, AlertCircle,
-} from "lucide-react";
-import { api } from "@/lib/api";
+  SearchOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
+  EnvironmentOutlined, PhoneOutlined, CalendarOutlined, DollarOutlined,
+  DeleteOutlined, ExclamationCircleOutlined, FileTextOutlined, ReloadOutlined,
+  EyeOutlined, SendOutlined, CopyOutlined, LinkOutlined,
+} from "@ant-design/icons";
 
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "polyabronuz_bot";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -61,8 +61,10 @@ export default function AdminApplicationsPage() {
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      const status = filterStatus !== "all" ? filterStatus : undefined;
-      const data = await api.getApplications(status);
+      const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
+      const res = await fetch(`/api/admin/applications${params}`);
+      if (!res.ok) throw new Error("Server xatolik");
+      const data = await res.json();
       setApplications(Array.isArray(data) ? data : []);
     } catch {
       message.error("Arizalarni yuklashda xatolik");
@@ -74,14 +76,22 @@ export default function AdminApplicationsPage() {
   const handleAction = async (id: number, action: "approve" | "reject") => {
     setActionLoading(id);
     try {
+      const res = await fetch("/api/admin/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Xatolik");
+      }
+      const result = await res.json();
+
       if (action === "approve") {
-        const result = await api.approveApplication(id);
-        const link = `https://t.me/${BOT_USERNAME}?start=owner_${result.field_id}_${result.owner_invite_token}`;
         setApplications((apps) => apps.filter((a) => a.id !== id));
         setDetailApp(null);
-        setTelegramLink({ link, field_name: result.field_name });
+        setTelegramLink({ link: result.telegram_link, field_name: result.field_name });
       } else {
-        await api.rejectApplication(id);
         setApplications((apps) => apps.filter((a) => a.id !== id));
         setDetailApp(null);
         message.success("Ariza rad etildi");
@@ -108,10 +118,20 @@ export default function AdminApplicationsPage() {
       cancelText: "Bekor",
       onOk: async () => {
         try {
-          // Tasdiqlangan va rad etilganlarni o'chirish
-          const processed = await api.getApplications();
-          const toDelete = processed.filter((a: any) => a.status !== "pending");
-          await Promise.all(toDelete.map((a: any) => api.deleteApplication(a.id)));
+          // Barcha arizalarni olish
+          const res = await fetch("/api/admin/applications");
+          if (!res.ok) throw new Error("Xatolik");
+          const all = await res.json();
+          const toDelete = all.filter((a: any) => a.status !== "pending");
+          await Promise.all(
+            toDelete.map((a: any) =>
+              fetch("/api/admin/applications", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: a.id }),
+              })
+            )
+          );
           message.success("Arxiv tozalandi");
           fetchApplications();
         } catch (error: any) {

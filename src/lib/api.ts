@@ -511,13 +511,11 @@ class ApiClient {
   }
 
   async submitApplication(payload: any): Promise<any> {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("field_applications")
-      .insert(payload)
-      .select()
-      .single();
+      .insert(payload);
     if (error) throw new Error(error.message);
-    return data;
+    return { success: true };
   }
 
   async approveApplication(id: number): Promise<{ field_id: number; owner_invite_token: string; field_name: string }> {
