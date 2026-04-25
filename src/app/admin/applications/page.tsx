@@ -111,7 +111,7 @@ export default function AdminApplicationsPage() {
   const showClearConfirm = () => {
     confirm({
       title: "Arxivni tozalash",
-      icon: <AlertCircle size={18} style={{ color: "#ef4444" }} />,
+      icon: <ExclamationCircleOutlined style={{ color: "#ef4444", fontSize: 18 }} />,
       content: "Ko'rib chiqilgan barcha arizalar o'chiriladi. Bu amalni qaytarib bo'lmaydi.",
       okText: "Ha, tozalash",
       okType: "danger",
@@ -195,7 +195,7 @@ export default function AdminApplicationsPage() {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 600, color: "#334155", fontSize: 13 }}>
-            <MapPin size={12} style={{ color: "#6366f1", marginRight: 4, verticalAlign: "middle" }} />
+            <EnvironmentOutlined style={{ color: "#6366f1", marginRight: 4, fontSize: 12, verticalAlign: "middle" }} />
             {record.city}
           </div>
           <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{record.address}</div>
@@ -220,7 +220,7 @@ export default function AdminApplicationsPage() {
       key: "phone",
       render: (phone) => (
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <Phone size={12} style={{ color: "#6366f1" }} />
+          <PhoneOutlined style={{ color: "#6366f1", fontSize: 12 }} />
           <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>{phone}</span>
         </div>
       ),
@@ -243,7 +243,7 @@ export default function AdminApplicationsPage() {
           <Tooltip title="Batafsil ko'rish">
             <Button
               type="text" size="small"
-              icon={<Eye size={14} />}
+              icon={<EyeOutlined />}
               onClick={() => setDetailApp(record)}
               style={{ color: "#6366f1", background: "#f5f3ff", borderRadius: 8, width: 32, height: 32 }}
             />
@@ -253,7 +253,7 @@ export default function AdminApplicationsPage() {
               <Tooltip title="Tasdiqlash">
                 <Button
                   type="text" size="small"
-                  icon={<CheckCircle2 size={14} />}
+                  icon={<CheckCircleOutlined />}
                   onClick={() => handleAction(record.id, "approve")}
                   loading={actionLoading === record.id}
                   style={{ color: "#059669", background: "#f0fdf4", borderRadius: 8, width: 32, height: 32 }}
@@ -262,7 +262,7 @@ export default function AdminApplicationsPage() {
               <Tooltip title="Rad etish">
                 <Button
                   type="text" size="small" danger
-                  icon={<XCircle size={14} />}
+                  icon={<CloseCircleOutlined />}
                   onClick={() => handleAction(record.id, "reject")}
                   loading={actionLoading === record.id}
                   style={{ background: "#fef2f2", borderRadius: 8, width: 32, height: 32 }}
@@ -294,11 +294,11 @@ export default function AdminApplicationsPage() {
         </div>
         <Space wrap>
           <Button
-            icon={<RefreshCw size={16} />} onClick={fetchApplications} loading={isLoading}
+            icon={<ReloadOutlined />} onClick={fetchApplications} loading={isLoading}
             style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 10 }}
           />
           <Button
-            danger icon={<Trash2 size={16} />} onClick={showClearConfirm}
+            danger icon={<DeleteOutlined />} onClick={showClearConfirm}
             style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 10 }}
           >
             Tozalash
@@ -332,9 +332,9 @@ export default function AdminApplicationsPage() {
                     display: "inline-flex", alignItems: "center", gap: 6,
                   }}
                 >
-                  {btn.key === "pending" && <Clock size={14} />}
-                  {btn.key === "approved" && <CheckCircle2 size={14} />}
-                  {btn.key === "rejected" && <XCircle size={14} />}
+                  {btn.key === "pending" && <ClockCircleOutlined />}
+                  {btn.key === "approved" && <CheckCircleOutlined />}
+                  {btn.key === "rejected" && <CloseCircleOutlined />}
                   {btn.label}
                 </button>
               ))}
@@ -401,7 +401,7 @@ export default function AdminApplicationsPage() {
               marginBottom: 16,
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                <Link2 size={12} style={{ marginRight: 5, verticalAlign: "middle" }} />
+                <LinkOutlined style={{ marginRight: 5, fontSize: 12, verticalAlign: "middle" }} />
                 Telegram Bot Linki
               </div>
               <div style={{
@@ -441,7 +441,7 @@ export default function AdminApplicationsPage() {
             <Space style={{ width: "100%" }} direction="vertical" size={8}>
               <Button
                 type="primary"
-                icon={<Copy size={16} />}
+                icon={<CopyOutlined />}
                 block
                 size="large"
                 onClick={() => copyLink(telegramLink.link)}
@@ -450,7 +450,7 @@ export default function AdminApplicationsPage() {
                 Linkni nusxalash
               </Button>
               <Button
-                icon={<Send size={16} />}
+                icon={<SendOutlined />}
                 block
                 size="large"
                 href={`https://t.me/share/url?url=${encodeURIComponent(telegramLink.link)}&text=${encodeURIComponent(`Polya botida ${telegramLink.field_name} maydonini boshqarish uchun ushbu linkni bosing`)}`}
@@ -481,7 +481,7 @@ export default function AdminApplicationsPage() {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontSize: 14,
             }}>
-              <FileText size={16} />
+              <FileTextOutlined style={{ fontSize: 16 }} />
             </div>
             <div>
               <div style={{ fontWeight: 700, color: "#0f172a" }}>Ariza tafsilotlari</div>
@@ -496,7 +496,7 @@ export default function AdminApplicationsPage() {
             <Space>
               <Button onClick={() => setDetailApp(null)} style={{ borderRadius: 10 }}>Yopish</Button>
               <Button
-                danger icon={<XCircle size={16} />}
+                danger icon={<CloseCircleOutlined />}
                 onClick={() => detailApp && handleAction(detailApp.id, "reject")}
                 loading={actionLoading === detailApp?.id}
                 style={{ borderRadius: 10 }}
@@ -504,7 +504,7 @@ export default function AdminApplicationsPage() {
                 Rad etish
               </Button>
               <Button
-                type="primary" icon={<CheckCircle2 size={16} />}
+                type="primary" icon={<CheckCircleOutlined />}
                 onClick={() => detailApp && handleAction(detailApp.id, "approve")}
                 loading={actionLoading === detailApp?.id}
                 style={{ background: "linear-gradient(135deg, #10b981, #059669)", border: "none", borderRadius: 10, fontWeight: 600 }}
@@ -532,10 +532,10 @@ export default function AdminApplicationsPage() {
             )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               {[
-                { icon: <MapPin size={12} />, label: "Shahar", value: detailApp.city },
-                { icon: <Phone size={12} />, label: "Telefon", value: detailApp.phone_number },
-                { icon: <DollarSign size={12} />, label: "Narx", value: `${detailApp.price_per_hour.toLocaleString()} UZS/soat` },
-                { icon: <Calendar size={12} />, label: "Yuborilgan", value: new Date(detailApp.created_at).toLocaleDateString("uz-UZ") },
+                { icon: <EnvironmentOutlined style={{ fontSize: 12 }} />, label: "Shahar", value: detailApp.city },
+                { icon: <PhoneOutlined style={{ fontSize: 12 }} />, label: "Telefon", value: detailApp.phone_number },
+                { icon: <DollarOutlined style={{ fontSize: 12 }} />, label: "Narx", value: `${detailApp.price_per_hour.toLocaleString()} UZS/soat` },
+                { icon: <CalendarOutlined style={{ fontSize: 12 }} />, label: "Yuborilgan", value: new Date(detailApp.created_at).toLocaleDateString("uz-UZ") },
               ].map((item) => (
                 <div key={item.label} style={{
                   background: "#f8fafc", borderRadius: 10, padding: "12px 14px",
